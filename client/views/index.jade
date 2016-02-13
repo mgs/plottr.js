@@ -1,0 +1,13 @@
+head
+  title serialTest
+body
+  #cursorValue
+    h1#val X: {{ xValue }} maxX: {{ getWidth }}
+    h1#val Y: {{ yValue }} maxY: {{ getHeight }}
+    h1#val selectedPen: {{ getSelectedPen }}
+    h1#penState penState: {{ penState }}
+    h1#fontSize fontSize: {{ getFontSize }}
+    h1#error Error: {{ getError }}
+  #pleaseWait
+    h1 Calibrating With Device
+  +serialData
