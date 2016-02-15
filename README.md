@@ -46,7 +46,7 @@ and then run the project in typical meteor fashion:
 Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)  
 Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)  
 
-# Console Commands
+# API Documentation
 ## **Error Handling**
 **`outputError()`**  
 This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  
