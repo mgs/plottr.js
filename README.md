@@ -66,6 +66,23 @@ Writes an array of serial commands to the plotter. The `commandArray` is structu
 #### **`setupPlotter()`**  
 Initializes the plotter and calibrates the software to be in sync with data queried from the device.
 
+#### **`setPaperSizeAndOrientation(paperSize, [width=8.5], [height=11], [orientation='landscape'])`**  
+Sets the paper size and orientation which in turn sets up the virtual plotting surface.  
+
+The first parameter is not optional and expects a string that describes the `paperType`. The following options are provided as built-in size templates:  
+
+`'Letter'`  
+`'Legal'`  
+`'Arch'`  
+`'A2'`  
+`'A3'`  
+`'A4'`  
+`'8.5x11'`  
+`'9x12'`  
+`'11x17'`  
+`'12x19'`  
+
+If the `papeType` parameter cannot be located in the paperType table a new definition will be created under the name of the string supplied. The new paper definition will be derived by the values entered as the `width`, `height`, and `orientation` parameters.  
 
 ### **Error Handling**
 #### **`outputError()`**  
