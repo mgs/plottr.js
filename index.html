@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>plottr.js by mgs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">plottr.js</h1>
+      <h2 class="project-tagline">Javascript Interface for working with Pen Plotters and Vinyl Cutters</h2>
+      <a href="https://github.com/mgs/plottr.js" class="btn">View on GitHub</a>
+      <a href="https://github.com/mgs/plottr.js/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/mgs/plottr.js/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>Clone this repository into a folder on your local machine. From your terminal you can enter the command:  </p>
+
+<p><code>git clone https://github.com/mgs/plottr.js.git ~/repos/plottr.js</code>  </p>
+
+<p>This will clone the project into a folder on your machine located at '~/repos/plottr.js'.  </p>
+
+<p>This project's only dependency is the Meteor javascript framework. If you don't have Meteor, it only takes a moment to install it: <a href="https://www.meteor.com/install">https://www.meteor.com/install</a>  </p>
+
+<p>Meteor will install all the necessary dependencies the first time that the project is run.  </p>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<p>Once meteor is installed, the project can be started by entering the project directory from the terminal:  </p>
+
+<p><code>cd ~/repos/plottr.js</code>  </p>
+
+<p>and then run the project in typical meteor fashion:  </p>
+
+<p><code>./plottr.sh</code>  </p>
+
+<h1>
+<a id="keyboard-controls" class="anchor" href="#keyboard-controls" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Keyboard Controls</h1>
+
+<p><img class="emoji" title=":arrow_up:" alt=":arrow_up:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b06.png" height="20" width="20" align="absmiddle"> : Moves the cursor one unit up<br>
+<img class="emoji" title=":arrow_down:" alt=":arrow_down:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b07.png" height="20" width="20" align="absmiddle"> :  Moves the cursor one unit down<br>
+<img class="emoji" title=":arrow_left:" alt=":arrow_left:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b05.png" height="20" width="20" align="absmiddle"> : Moves the cursor one unit left<br>
+<img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/27a1.png" height="20" width="20" align="absmiddle"> : Moves the cursor one unit right<br>
+<strong><code>Shift</code> +</strong> <img class="emoji" title=":arrow_up:" alt=":arrow_up:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b06.png" height="20" width="20" align="absmiddle"> : Moves the cursor five units up<br>
+<strong><code>Shift</code> +</strong> <img class="emoji" title=":arrow_down:" alt=":arrow_down:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b07.png" height="20" width="20" align="absmiddle"> : Moves the cursor five units down<br>
+<strong><code>Shift</code> +</strong> <img class="emoji" title=":arrow_left:" alt=":arrow_left:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b05.png" height="20" width="20" align="absmiddle"> : Moves the cursor five units left<br>
+<strong><code>Shift</code> +</strong> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/27a1.png" height="20" width="20" align="absmiddle"> : Moves the cursor five units right<br>
+<strong><code>⌘</code> +</strong> <img class="emoji" title=":arrow_up:" alt=":arrow_up:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b06.png" height="20" width="20" align="absmiddle"> : Increase the relative scale of the font-height by 5%<br>
+<strong><code>⌘</code> +</strong> <img class="emoji" title=":arrow_down:" alt=":arrow_down:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b07.png" height="20" width="20" align="absmiddle"> : Decrease the relative scale of the font-height by 5%<br>
+<strong><code>⌘</code> +</strong> <img class="emoji" title=":arrow_left:" alt=":arrow_left:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2b05.png" height="20" width="20" align="absmiddle"> : Decrease the relative scale of the font-width by 5%<br>
+<strong><code>⌘</code> +</strong>: <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/27a1.png" height="20" width="20" align="absmiddle"> : Increase the relative scale of the font-width by 5%<br>
+<strong><code>Control</code> + <code>Spacebar</code></strong>: Toggle penState<br>
+<strong><code>⌘</code> + <code>F1</code></strong> : Select Pen 1<br>
+<strong><code>⌘</code> + <code>F2</code></strong> : Select Pen 2<br>
+<strong><code>⌘</code> + <code>F3</code></strong> : Select Pen 3<br>
+<strong><code>⌘</code> + <code>F4</code></strong> : Select Pen 4<br>
+<strong><code>⌘</code> + <code>F5</code></strong> : Select Pen 5<br>
+<strong><code>⌘</code> + <code>F6</code></strong> : Select Pen 6<br>
+<strong><code>⌘</code> + <code>F7</code></strong> : Select Pen 7<br>
+<strong><code>⌘</code> + <code>F8</code></strong> : Select Pen 8<br>
+<strong><code>⌘</code> + <code>F12</code></strong>: Toggle Visibility of Data Overlay<br>
+<strong><code>Escape</code></strong>: Put Away Selected Pen  </p>
+
+<p>Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)<br>
+Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)  </p>
+
+<h1>
+<a id="api-documentation" class="anchor" href="#api-documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API Documentation</h1>
+
+<h2>
+<a id="error-handling" class="anchor" href="#error-handling" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>Error Handling</strong>
+</h2>
+
+<h3>
+<a id="outputerror" class="anchor" href="#outputerror" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>outputError()</code></strong>
+</h3>
+
+<p>This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  </p>
+
+<h2>
+<a id="pen-control" class="anchor" href="#pen-control" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>Pen Control</strong>
+</h2>
+
+<h3>
+<a id="penupxy" class="anchor" href="#penupxy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>penUp([x,y])</code></strong>
+</h3>
+
+<p>If no parameters are provided the command will send a simple "PU" (PEN-UP) command to the plotter instructing the device to lift the pen. If parameters of X and Y are provided the plotter will move the pen to the X,Y coordinates while keeping the pen raised.  </p>
+
+<h3>
+<a id="pendownxy" class="anchor" href="#pendownxy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>penDown([x,y])</code></strong>
+</h3>
+
+<p>If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified X,Y coordinates while keeping the pen down against the surface.  </p>
+
+<h2>
+<a id="drawing-functions" class="anchor" href="#drawing-functions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Drawing Functions</h2>
+
+<h3>
+<a id="linex0y0x1y1" class="anchor" href="#linex0y0x1y1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>line(x0,y0,x1,y1)</code></strong>
+</h3>
+
+<p>Draws a line from point (X0,Y0) to point (X1,Y1)  </p>
+
+<h3>
+<a id="rectxywh" class="anchor" href="#rectxywh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>rect(x,y,w,h)</code></strong>
+</h3>
+
+<p>Draws a rectangle at point (X,Y) with width of W and height of H  </p>
+
+<h3>
+<a id="ellipsexywh" class="anchor" href="#ellipsexywh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>ellipse(x,y,w,h)</code></strong>
+</h3>
+
+<p>Draws an ellipse with center at point (X,Y) and using width of W and height of H  </p>
+
+<h3>
+<a id="pointxy" class="anchor" href="#pointxy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>point(x,y)</code></strong>
+</h3>
+
+<p>draw a point at the specified (X,Y) coordinates  </p>
+
+<h2>
+<a id="text-functions" class="anchor" href="#text-functions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Text Functions</h2>
+
+<h3>
+<a id="textx-y-string" class="anchor" href="#textx-y-string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>text(x, y, string)</code></strong>
+</h3>
+
+<p>plots the specified STRING starting at point (X,Y)  </p>
+
+<h3>
+<a id="incrementfontwidthsizescale" class="anchor" href="#incrementfontwidthsizescale" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>incrementFontWidthSize(scale)</code></strong>
+</h3>
+
+<p>increments the font-width size by scale  </p>
+
+<h3>
+<a id="decrementfontwidthsizescale" class="anchor" href="#decrementfontwidthsizescale" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>decrementFontWidthSize(scale)</code></strong>
+</h3>
+
+<p>decrements the font-width size by scale  </p>
+
+<h3>
+<a id="incrementfontwidthsizescale-1" class="anchor" href="#incrementfontwidthsizescale-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>incrementFontWidthSize(scale)</code></strong>
+</h3>
+
+<p>increments the font-width size by scale  </p>
+
+<h3>
+<a id="decrementfontwidthsizescale-1" class="anchor" href="#decrementfontwidthsizescale-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><code>decrementFontWidthSize(scale)</code></strong>
+</h3>
+
+<p>decrements the font-width size by scale  </p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/mgs/plottr.js">plottr.js</a> is maintained by <a href="https://github.com/mgs">mgs</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
