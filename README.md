@@ -71,10 +71,10 @@ Draws an ellipse with center at point (X,Y) and using width of W and height of H
 draw a point at the specified (X,Y) coordinates  
 
 ## Text Functions
-**`text(x, y, string)`**
+**`text(x, y, string)`**  
 plots the specified STRING starting at point (X,Y)  
 
-**``incrementFontWidthSize(scale)``**  
+**`incrementFontWidthSize(scale)`**  
 increments the font-width size by scale  
 
 **`decrementFontWidthSize(scale)`**  
