@@ -24,13 +24,13 @@ and then run the project in typical meteor fashion:
 
 # Keyboard Controls  
 **`←`**: Moves the cursor one unit left  
-**`↑`**: Moves the cursor one unit up  
 **`→`**: Moves the cursor one unit right  
+**`↑`**: Moves the cursor one unit up  
 **`↓`**: Moves the cursor one unit down  
-**`⌘` + `↑`**: Increase the relative scale of the font-height by 5%  
-**`⌘` + `↓`**: Decrease the relative scale of the font-height by 5%  
 **`⌘` + `←`**: Decrease the relative scale of the font-width by 5%  
 **`⌘` + `→`**: Increase the relative scale of the font-width by 5%  
+**`⌘` + `↑`**: Increase the relative scale of the font-height by 5%  
+**`⌘` + `↓`**: Decrease the relative scale of the font-height by 5%  
 **`Control` + `Spacebar`**: Toggle PEN-STATE  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
