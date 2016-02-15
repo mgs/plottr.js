@@ -35,7 +35,6 @@ and then run the project in typical meteor fashion:
 **`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5%  
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5%  
 **`⌘` +**: :arrow_right: : Increase the relative scale of the font-width by 5%  
-<<<<<<< HEAD
 **`Control` + `Spacebar`**: Toggle penState  
 =======
 **`Control` + `Spacebar`**: Toggle PEN-STATE  
@@ -53,7 +52,6 @@ and then run the project in typical meteor fashion:
 Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)  
 Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)  
 
-<<<<<<< HEAD
 # API Documentation  
 ## **Error Handling**  
 ### **`outputError()`**  
@@ -71,11 +69,9 @@ If no parameters are provided the command will send a simple "PU" (PEN-UP) comma
 ### **`penDown([x,y])`**  
 If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified X,Y coordinates while keeping the pen down against the surface.  
 
-<<<<<<< HEAD
 ## Drawing Functions  
 =======
 ## Drawing Functions
->>>>>>> a3d127678017a1627239725eeb8422e7f7059583
 ### **`line(x0,y0,x1,y1)`**  
 Draws a line from point (X0,Y0) to point (X1,Y1)  
 
@@ -88,11 +84,9 @@ Draws an ellipse with center at point (X,Y) and using width of W and height of H
 ### **`point(x,y)`**  
 draw a point at the specified (X,Y) coordinates  
 
-<<<<<<< HEAD
 ## Text Functions  
 =======
 ## Text Functions
->>>>>>> a3d127678017a1627239725eeb8422e7f7059583
 ### **`text(x, y, string)`**  
 plots the specified STRING starting at point (X,Y)  
 

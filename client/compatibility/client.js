@@ -481,15 +481,9 @@ function updateCanvas (){
 
     var w = Math.round(parseFloat(plotter.get('maxWidth') / plotter.get('charWidth')));
     var h = Math.round(parseFloat(plotter.get('maxHeight') / plotter.get('lineHeight')));
-    console.log(Number(plotter.get('x')) - 1081, Number(plotter.get('y'))-1000, w, h);
-
+    if (plotter.get('debug')){
+        console.log(Number(plotter.get('x')) - 1081, Number(plotter.get('y'))-1000, w, h);
+    }
     ctx.fillStyle = '#000000';
     ctx.fillRect(Number(plotter.get('x'))-1081, Number(plotter.get('y'))-1000, w, h);
-    // for(var i = 0; i < Math.round(w); i+=1) {
-    //     for(var j = 0; j < Math.round(h); j+=1) {
-    //         //ctx.fillStyle = '#' + Math.floor(Math.random()*99) + 'FF00';
-    //         ctx.fillStyle = '#000000';
-    //         ctx.fillRect(i*w, j*h, w, h);
-    //     }
-    // }
 }
