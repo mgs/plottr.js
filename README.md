@@ -54,7 +54,7 @@ This function will update the error information displayed in the console. Use th
 **`penUp([x,y])`**  
 If no parameters are provided the command will send a simple "PU" (PEN-UP) command to the plotter instructing the device to lift the pen. If parameters of X and Y are provided the plotter will move the pen to the X,Y coordinates while keeping the pen raised.  
 
-`**penDown([x,y])**  `
+**`penDown([x,y])`**  
 If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified X,Y coordinates while keeping the pen down against the surface.  
 
 ## Drawing Functions
