@@ -3,6 +3,7 @@ var ui = {
 };
 
 var plotter = {
+    messageQueue: [],
     get: (key) => {
         return Session.get('plotter.' + key);
     },
@@ -58,6 +59,33 @@ function serialWrite(string, callback){
             return res;
         }
     });
+}
+
+
+function bufferedSerialWrite(queue, delay){
+    if(queue.length > 1) {
+        setTimeout ( () => {
+            let message = queue[0][0];
+            let callback = queue[0][1];
+            let rqueue = queue.reverse();
+            rqueue.pop();
+            Meteor.call('write', message + ';', function(err, res){
+                if(err){
+                    return serialError(err);
+                } else {
+                    setTimeout(serialRead, 200);
+                    setTimeout(callback, 300);
+                    return res;
+                }
+            });
+
+            bufferedSerialWrite(rqueue.reverse());
+        }, delay);
+    } else {
+        setTimeout ( () => {
+            queue.pop();
+        }, delay);
+    }
 }
 
 // Maintenance Functions
@@ -181,11 +209,69 @@ function home(topRightIfTrue){
     }
 }
 
+function increaseFontWidth (amount){
+    let fsw = (Number(plotter.get('fontWidth')) + amount);
+    let fsh = (Number(plotter.get('fontHeight')));
+    plotter.set('fontWidth', fsw);
+    serialWrite('SR,' + fsw + ',' + fsh);
+}
+
+function decreaseFontWidth (amount){
+    let fsw = (Number(plotter.get('fontWidth')) - amount);
+    let fsh = (Number(plotter.get('fontHeight')));
+    plotter.set('fontWidth', fsw);
+    serialWrite('SR,' + fsw + ',' + fsh);
+}
+
+function increaseFontHeight (amount){
+    let fsw = (Number(plotter.get('fontWidth')));
+    let fsh = (Number(plotter.get('fontHeight')) + amount);
+    plotter.set('fontHeight', fsh);
+    serialWrite('SR,' + fsw + ',' + fsh);
+}
+
+function decreaseFontHeight (amount){
+    let fsw = (Number(plotter.get('fontWidth')));
+    let fsh = (Number(plotter.get('fontHeight'))  - amount);
+    plotter.set('fontHeight', fsh);
+    serialWrite('SR,' + fsw + ',' + fsh);
+}
+
+function rotate(angle){
+    let newAngle = Number(plotter.get('textAngle')) + angle;
+    console.log(newAngle);
+    if (newAngle < 0){
+        console.log('neg');
+        let a = 360 + (Number(plotter.get('textAngle')) + angle);
+        plotter.set('textAngle', a);
+    } else {
+        console.log('pos');
+        let a = (Number(plotter.get('textAngle')) + angle) % 360;
+        plotter.set('textAngle', a);
+    }
+}
+
+function getData(variable){
+    let data = plotter.get(variable);
+    if (isNaN(data)){
+        return 'Waiting...';
+    } else if (typeof(data) === 'number'){
+        return data;
+    } else {
+        return 'Waiting...';
+    }
+}
+
 Template.body.helpers({
-    xValue: () => plotter.get('x'),
-    yValue: () => plotter.get('y'),
-    penState: () => plotter.get('penState'),
-    getSelectedPen: () => plotter.get('selectedPen'),
+    xValue: () => getData('x'),
+    yValue: () => getData ('y'),
+    getHeight: () => getData('maxHeight'),
+    getWidth: () => getData('maxWidth'),
+    penState: () => getData('penState'),
+    getSelectedPen: () => getData('selectedPen'),
+    getFontWidth: () => Math.round(plotter.get('fontWidth') * 80),
+    getFontHeight: () => Math.round(plotter.get('fontHeight') * 160),
+    getTextAngle: () => plotter.get('textAngle'),
     getError: () => {
         let error = plotter.get('error');
         if(error) {
@@ -193,10 +279,7 @@ Template.body.helpers({
         } else {
             return 'No Error';
         }
-    },
-    getFontSize: () => plotter.get('fontSize'),
-    getHeight: () => plotter.get('maxHeight'),
-    getWidth: () => plotter.get('maxWidth')
+    }
 });
 
 var cursor = {
@@ -238,6 +321,11 @@ function debug(e){
     }
 }
 
+var altKeydownTable = {
+    37: () => rotate(-30),  // Left Arrow
+    39: () => rotate(30)    // Right Arrow
+};
+
 var shiftedKeydownTable = {
     16: () => 0, // Shift Key
     37: () => cursor.left(5), // Shifted Left Arrow
@@ -247,6 +335,7 @@ var shiftedKeydownTable = {
 };
 
 var controlKeyTable = {
+    17: undefined,
     32: () => {
         if(plotter.get('penState') === 0) {
             penDown();
@@ -265,24 +354,12 @@ var controlKeyTable = {
     }
 };
 
-function incrementFontSize (){
-    let fs = (Number(plotter.get('fontSize')) * 1.05);
-    plotter.set('fontSize', fs);
-    serialWrite('SR,' + fs + ',' + fs);
-}
-
-function decrementFontSize (){
-    let fs = (Number(plotter.get('fontSize')) * 0.95);
-    plotter.set('fontSize', fs);
-    serialWrite('SR,' + fs + ',' + fs);
-}
-
 var metaKeyTable = {
     27: () => selectPen(0),
-    43: () => incrementFontSize(),
-    45: () => decrementFontSize(),
-    38: () => incrementFontSize(),
-    40: () => decrementFontSize(),
+    37: () => decreaseFontWidth(0.05),
+    38: () => increaseFontHeight(0.05),
+    39: () => increaseFontWidth(0.05),
+    40: () => decreaseFontHeight(0.05),
     112: () => selectPen(1), // F1
     113: () => selectPen(2), // F2
     114: () => selectPen(3), // F3
@@ -323,22 +400,22 @@ var keydownTable = {
 function handleKeydown (e){
     console.dir(e);
     if(e.shiftKey){
-        console.log('shifted');
         if (shiftedKeydownTable.hasOwnProperty(e.keyCode)){
             shiftedKeydownTable[e.keyCode]();
         }
     } else if(e.metaKey) {
-        console.log('metaed');
         if (metaKeyTable.hasOwnProperty(e.keyCode)){
             metaKeyTable[e.keyCode]();
         }
     } else if(e.ctrlKey) {
-        console.log('controlled');
         if (controlKeyTable.hasOwnProperty(e.keyCode)){
             controlKeyTable[e.keyCode]();
         }
+    } else if(e.altKey) {
+        if (altKeydownTable.hasOwnProperty(e.keyCode)){
+            altKeydownTable[e.keyCode]();
+        }
     } else {
-        console.log('elsed');
         if (keydownTable.hasOwnProperty(e.keyCode)){
             keydownTable[e.keyCode]();
         }
@@ -389,21 +466,23 @@ Session.setDefault({
     'plotter.messageQueue': [],
     'plotter.buffer': [0,0,0],
     'plotter.status': 0,
-    'plotter.fontSize': 1.0,
+    'plotter.fontWidth': 1.0,
+    'plotter.fontHeight': 1.0,
+    'plotter.textAngle': 90,
     'plotter.error': 0,
     'plotter.pageWidth': 0,
     'plotter.pageHeight': 0,
-    'plotter.maxWidth': 'calibrating',
-    'plotter.maxHeight': 'calibrating',
-    'plotter.charWidth': 'calibrating',
-    'plotter.lineHeight': 'calibrating',
+    'plotter.maxWidth':  0,
+    'plotter.maxHeight': 0,
+    'plotter.charWidth': 8,
+    'plotter.lineHeight': 16,
     'plotter.xMin': 1081,
     'plotter.yMin': 1000,
     'plotter.p1': 0,
     'plotter.p2': 0,
     'plotter.x':  1000,
     'plotter.y':  1000,
-    'plotter.penState': 'calibrating',
+    'plotter.penState': 0,
     'plotter.selectedPen': 0,
     'plotter.terminator': String.fromCharCode(3),
     'plotter.escape': String.fromCharCode(27),
@@ -415,21 +494,22 @@ Meteor.startup(() => {
         'plotter.messageQueue': [],
         'plotter.buffer': [0,0,0],
         'plotter.status': 0,
-        'plotter.fontSize': 1.0,
+        'plotter.fontWidth': 1.0,
+        'plotter.fontHeight': 1.0,
         'plotter.error': 0,
         'plotter.pageWidth': 0,
         'plotter.pageHeight': 0,
-        'plotter.maxWidth': 'calibrating',
-        'plotter.maxHeight': 'calibrating',
-        'plotter.charWidth': 'calibrating',
-        'plotter.lineHeight': 'calibrating',
+        'plotter.maxWidth': 0,
+        'plotter.maxHeight': 0,
+        'plotter.charWidth': 8,
+        'plotter.lineHeight': 16,
         'plotter.xMin': 1000,
         'plotter.yMin': 1000,
         'plotter.p1': 0,
         'plotter.p2': 0,
         'plotter.x':  1081,
         'plotter.y':  1000,
-        'plotter.penState': 'calibrating',
+        'plotter.penState': 0,
         'plotter.selectedPen': 0,
         'plotter.terminator': String.fromCharCode(3),
         'plotter.escape': String.fromCharCode(27),
@@ -454,8 +534,8 @@ Meteor.startup(() => {
     setTimeout(() => {
         plotter.set('lineHeight', parseFloat(plotter.get('y') - parseFloat(1000)));
         plotter.set('charWidth', parseFloat(plotter.get('x') - 1000));
-        plotter.set ('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
-        plotter.set ('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
+        plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
+        plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
         $('#pleaseWait').fadeOut(800,function (){
             $('body').css('background', ui.bgColor);
             $('#cursorValue').css('background', ui.bgColor);

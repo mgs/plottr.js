@@ -1,12 +1,14 @@
 head
-  title serialTest
+  title plottr.js
 body
   #cursorValue
     h1#val X: {{ xValue }} maxX: {{ getWidth }}
     h1#val Y: {{ yValue }} maxY: {{ getHeight }}
     h1#val selectedPen: {{ getSelectedPen }}
     h1#penState penState: {{ penState }}
-    h1#fontSize fontSize: {{ getFontSize }}
+    h1#fontSize fontWidth: {{ getFontWidth }}
+    h1#fontSize fontHeight: {{ getFontHeight }}
+    h1#fontSize textAngle: {{ getTextAngle }}
     h1#error Error: {{ getError }}
   #pleaseWait
     h1 Calibrating With Device

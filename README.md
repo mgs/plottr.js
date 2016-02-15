@@ -18,7 +18,7 @@ Once meteor is installed, the project can be started by entering the project dir
 
 `cd ~/repos/plottr.js`  
 
-and then run the project in typical meteor fashion:  
+and then run the project using the supplied shellscript:
 
 `./plottr.sh`  
 
@@ -27,15 +27,17 @@ and then run the project in typical meteor fashion:
 :arrow_down: :  Moves the cursor one unit down  
 :arrow_left: : Moves the cursor one unit left  
 :arrow_right: : Moves the cursor one unit right  
-**`Shift` +** :arrow_up: : Moves the cursor five units up  
-**`Shift` +** :arrow_down: : Moves the cursor five units down  
-**`Shift` +** :arrow_left: : Moves the cursor five units left  
-**`Shift` +** :arrow_right: : Moves the cursor five units right  
+**`shift` +** :arrow_up: : Moves the cursor five units up  
+**`shift` +** :arrow_down: : Moves the cursor five units down  
+**`shift` +** :arrow_left: : Moves the cursor five units left  
+**`shift` +** :arrow_right: : Moves the cursor five units right  
 **`⌘` +** :arrow_up: : Increase the relative scale of the font-height by 5%  
 **`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5%  
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5%  
-**`⌘` +**: :arrow_right: : Increase the relative scale of the font-width by 5%  
-**`Control` + `Spacebar`**: Toggle penState  
+**`⌘` +** :arrow_right: : Increase the relative scale of the font-width by 5%  
+**`option` +** : :arrow_left: : Decrease the relative scale of the font-width by 5%  
+**`option` +** : :arrow_right: : Increase the relative scale of the font-width by 5%  
+**`control` + `Spacebar`** : Toggle penState  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
 **`⌘` + `F3`** : Select Pen 3  
@@ -45,12 +47,26 @@ and then run the project in typical meteor fashion:
 **`⌘` + `F7`** : Select Pen 7  
 **`⌘` + `F8`** : Select Pen 8  
 **`⌘` + `F12`** : Toggle Visibility of Data Overlay  
-**`Escape`** : Put away the [[selectedPen]] if there is no pen selected bring the plotter to the home position ([maxWidth], [maxHeight])
+**`escape`** : Put away the [[selectedPen]] if there is no pen selected bring the plotter to the home position ([maxWidth], [maxHeight])
 
 **Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)**  
 **Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)**  
 
 # API Documentation
+
+### **Serial Device Helpers**
+#### **`serialRead()`**  
+Reads data from the serialPort, stores the data into a serialBuffer, and syncs the read data between the server and client.
+
+#### **`serialWrite(string, callback)`**  
+Writes `string` to the serialPort and then call `callback` upon completion.
+
+#### **`bufferedSerialWrite(commandArray, interval)`**  
+Writes an array of serial commands to the plotter. The `commandArray` is structured as an array of pairs containing HPGL strings and a callback for that command. 
+#### **`setupPlotter()`**  
+Initializes the plotter and calibrates the software to be in sync with data queried from the device.
+
+
 ### **Error Handling**
 #### **`outputError()`**  
 This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  
@@ -114,14 +130,17 @@ Plots `string` at (`x`,`y`).
 
 plots the phrase supplied as `string` at the point (2000,2500).
 
-#### **`incrementFontWidthSize(scale)`**  
+#### **`increaseFontWidth(amount)`**  
 Increases the font-width size by scale  
 
-#### **`decrementFontWidthSize(scale)`**  
+#### **`decreaseFontWidth(amount)`**  
 Decreases the font-width size by scale  
 
-#### **`incrementFontWidthSize(scale)`**  
+#### **`increaseFontWidth(amount)`**  
 Increases the font-width size by scale  
 
-#### **`decrementFontWidthSize(scale)`**  
+#### **`decreaseFontWidth(amount)`**  
 Decreases the font-width size by scale  
+
+#### **`rotate(angle)`**  
+Adds `angle` to the current `textAngle` variable. `angle` can be positive or negative and will wrap at 360 degrees. 
