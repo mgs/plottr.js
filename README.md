@@ -23,15 +23,15 @@ and then run the project in typical meteor fashion:
 `./plottr.sh`  
 
 # Keyboard Controls  
+**`←`**: Moves the cursor one unit left  
+**`↑`**: Moves the cursor one unit up  
+**`→`**: Moves the cursor one unit right  
+**`↓`**: Moves the cursor one unit down  
+**`⌘` + `↑`**: Increase the relative scale of the font-height by 5%  
+**`⌘` + `↓`**: Decrease the relative scale of the font-height by 5%  
+**`⌘` + `←`**: Decrease the relative scale of the font-width by 5%  
+**`⌘` + `→`**: Increase the relative scale of the font-width by 5%  
 **`Control` + `Spacebar`**: Toggle PEN-STATE  
-**`Left`**: Moves the cursor one unit left  
-**`Up`**: Moves the cursor one unit up  
-**`Right`**: Moves the cursor one unit right  
-**`Down`**: Moves the cursor one unit down  
-**`⌘` + `Up`**: Increase the relative scale of the font-height by 5%  
-**`⌘` + `Down`**: Decrease the relative scale of the font-height by 5%  
-**`⌘` + `Left`**: Decrease the relative scale of the font-width by 5%  
-**`⌘` + `Right`**: Increase the relative scale of the font-width by 5%  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
 **`⌘` + `F3`** : Select Pen 3  
@@ -84,4 +84,4 @@ decrements the font-width size by scale
 increments the font-width size by scale  
 
 **`decrementFontWidthSize(scale)`**  
-decrements the font-width size by scale
+decrements the font-width size by scale  
