@@ -61,31 +61,47 @@ function serialWrite(string, callback){
     });
 }
 
+function smoothIncrement(variable, finish, step){
+    let val = plotter.get(variable);
+    let newVal;
+    if (val < finish){
+        newVal = Number(plotter.get(variable)) + step;
+        setTimeout(function (){
+            plotter.set(variable, newVal);
+            smoothIncrement(variable, finish, step);
+        }, 1);
+    } else if (val > finish){
+        newVal = Number(plotter.get(variable)) - step;
+        setTimeout(function (){
+            plotter.set(variable, newVal);
+            smoothIncrement(variable, finish, step);
+        }, 1);
+    } else {
+        plotter.set(variable, finish);
+    }
+}
 
 function bufferedSerialWrite(queue, delay){
-    if(queue.length > 1) {
-        setTimeout ( () => {
-            let message = queue[0][0];
-            let callback = queue[0][1];
-            let rqueue = queue.reverse();
-            rqueue.pop();
-            Meteor.call('write', message + ';', function(err, res){
-                if(err){
-                    return serialError(err);
-                } else {
-                    setTimeout(serialRead, 200);
-                    setTimeout(callback, 300);
-                    return res;
-                }
-            });
-
-            bufferedSerialWrite(rqueue.reverse());
-        }, delay);
-    } else {
-        setTimeout ( () => {
-            queue.pop();
-        }, delay);
-    }
+        if(queue.length > 1) {
+            let packet = _.first(queue);
+            let message = packet[0];
+            let callback = packet[1];
+            serialWrite(message, callback);
+            console.log(message);
+            queue.shift();
+            setTimeout(() => {
+                bufferedSerialWrite(queue, delay);
+            }, delay);
+        } else {
+            let packet = _.first(queue);
+            let message = packet[0];
+            let callback = packet[1];
+            console.log(message);
+            queue.shift();
+            setTimeout(() => {
+                serialWrite(message, callback);
+            }, delay);
+        }
 }
 
 // Maintenance Functions
