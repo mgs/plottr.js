@@ -35,8 +35,8 @@ and then run the project using the supplied shellscript:
 **`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5 PLU  
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5 PLU  
 **`⌘` +** :arrow_right: : Increase the relative scale of the font-width by 5 PLU  
-**`option` +** : :arrow_left: : Rotate the `textAngle` by 30 degrees  
-**`option` +** : :arrow_right: : Rotate the `textAngle` by -30 degrees  
+**`option` +** : :arrow_left: : Rotate the `textAngle` by -30 degrees  
+**`option` +** : :arrow_right: : Rotate the `textAngle` by 30 degrees  
 **`control` + `Spacebar`** : Toggle penState  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
