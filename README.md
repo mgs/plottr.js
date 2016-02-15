@@ -15,9 +15,9 @@ Library for communicating with vintage pen plotters both for plotting or real-ti
 - Usage
 
 -- Once meteor is installed, the project can be started by entering the project directory from the terminal:
-`cd ~/repos/plottr.js`
+-- `cd ~/repos/plottr.js`
 -- and then run the project in typical meteor fashion:
-`./plottr.sh`
+-- `./plottr.sh`
 
 - Keyboard Controls
 -- Control + Spacebar - Toggle PEN-STATE
