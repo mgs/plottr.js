@@ -27,6 +27,10 @@ and then run the project in typical meteor fashion:
 **`→`**: Moves the cursor one unit right  
 **`↑`**: Moves the cursor one unit up  
 **`↓`**: Moves the cursor one unit down  
+**`Shift` + `←`**: Moves the cursor one unit left  
+**`Shift` + `→`**: Moves the cursor one unit right  
+**`Shift` + `↑`**: Moves the cursor one unit up  
+**`Shift` + `↓`**: Moves the cursor one unit down  
 **`⌘` + `←`**: Decrease the relative scale of the font-width by 5%  
 **`⌘` + `→`**: Increase the relative scale of the font-width by 5%  
 **`⌘` + `↑`**: Increase the relative scale of the font-height by 5%  
