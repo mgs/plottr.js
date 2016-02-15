@@ -27,10 +27,10 @@ and then run the project in typical meteor fashion:
 :arrow_down: :  Moves the cursor one unit down  
 :arrow_left: : Moves the cursor one unit left  
 :arrow_right: : Moves the cursor one unit right  
-**`Shift` +** :arrow_up: : Moves the cursor one unit up  
-**`Shift` +** :arrow_down: : Moves the cursor one unit down  
-**`Shift` +** :arrow_left: : Moves the cursor one unit left  
-**`Shift` +** :arrow_right: : Moves the cursor one unit right  
+**`Shift` +** :arrow_up: : Moves the cursor five units up  
+**`Shift` +** :arrow_down: : Moves the cursor five units down  
+**`Shift` +** :arrow_left: : Moves the cursor five units left  
+**`Shift` +** :arrow_right: : Moves the cursor five units right  
 **`⌘` +** :arrow_up: : Increase the relative scale of the font-height by 5%  
 **`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5%  
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5%  
@@ -52,40 +52,40 @@ Drag an SVG file onto the browser window to draw the interpolated shape onto the
 
 # API Documentation
 ## **Error Handling**
-**`outputError()`**  
+### **`outputError()`**  
 This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  
 ## **Pen Control**
-**`penUp([x,y])`**  
+### **`penUp([x,y])`**  
 If no parameters are provided the command will send a simple "PU" (PEN-UP) command to the plotter instructing the device to lift the pen. If parameters of X and Y are provided the plotter will move the pen to the X,Y coordinates while keeping the pen raised.  
 
-**`penDown([x,y])`**  
+### **`penDown([x,y])`**  
 If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified X,Y coordinates while keeping the pen down against the surface.  
 
 ## Drawing Functions
-**`line(x0,y0,x1,y1)`**  
+### **`line(x0,y0,x1,y1)`**  
 Draws a line from point (X0,Y0) to point (X1,Y1)  
 
-**`rect(x,y,w,h)`**  
+### **`rect(x,y,w,h)`**  
 Draws a rectangle at point (X,Y) with width of W and height of H  
 
-**`ellipse(x,y,w,h)`**  
+### **`ellipse(x,y,w,h)`**  
 Draws an ellipse with center at point (X,Y) and using width of W and height of H  
 
-**`point(x,y)`**  
+### **`point(x,y)`**  
 draw a point at the specified (X,Y) coordinates  
 
 ## Text Functions
-**`text(x, y, string)`**  
+### **`text(x, y, string)`**  
 plots the specified STRING starting at point (X,Y)  
 
-**`incrementFontWidthSize(scale)`**  
+### **`incrementFontWidthSize(scale)`**  
 increments the font-width size by scale  
 
-**`decrementFontWidthSize(scale)`**  
+### **`decrementFontWidthSize(scale)`**  
 decrements the font-width size by scale  
 
-**`incrementFontWidthSize(scale)`**  
+### **`incrementFontWidthSize(scale)`**  
 increments the font-width size by scale  
 
-**`decrementFontWidthSize(scale)`**  
+### **`decrementFontWidthSize(scale)`**  
 decrements the font-width size by scale  
