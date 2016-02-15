@@ -23,18 +23,18 @@ and then run the project in typical meteor fashion:
 `./plottr.sh`  
 
 # Keyboard Controls  
-**`⬆`**: Moves the cursor one unit up  
-**`⬇`**: Moves the cursor one unit down  
-**`⬅`**: Moves the cursor one unit left  
-**`➡`**: Moves the cursor one unit right  
-**`Shift` + `⬆`**: Moves the cursor one unit up  
-**`Shift` + `⬇`**: Moves the cursor one unit down  
-**`Shift` + `⬅`**: Moves the cursor one unit left  
-**`Shift` + `➡`**: Moves the cursor one unit right  
-**`⌘` + `⬆`**: Increase the relative scale of the font-height by 5%  
-**`⌘` + `⬇`**: Decrease the relative scale of the font-height by 5%  
-**`⌘` + `⬅`**: Decrease the relative scale of the font-width by 5%  
-**`⌘` + `➡`**: Increase the relative scale of the font-width by 5%  
+**`▲`**: Moves the cursor one unit up  
+**`▼`**: Moves the cursor one unit down  
+**`◀`**: Moves the cursor one unit left  
+**`▶`**: :arrow_right: Moves the cursor one unit right  
+**`Shift` + `▲`**: Moves the cursor one unit up  
+**`Shift` + `▼`**: Moves the cursor one unit down  
+**`Shift` + `◀`**: Moves the cursor one unit left  
+**`Shift` + `▶`**: Moves the cursor one unit right  
+**`⌘` + `▲`**: Increase the relative scale of the font-height by 5%  
+**`⌘` + `▼`**: Decrease the relative scale of the font-height by 5%  
+**`⌘` + `◀`**: Decrease the relative scale of the font-width by 5%  
+**`⌘` + `▶`**: Increase the relative scale of the font-width by 5%  
 **`Control` + `Spacebar`**: Toggle PEN-STATE  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
