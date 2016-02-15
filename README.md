@@ -32,7 +32,7 @@ and then run the project using the supplied shellscript:
 **`shift` +** :arrow_left: : Moves the cursor five units left  
 **`shift` +** :arrow_right: : Moves the cursor five units right  
 **`⌘` +** :arrow_up: : Increase the relative scale of the font-height by 5 PLU  
-**`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5 PLU__
+**`⌘` +** :arrow_down: : Decrease the relative scale of the font-height by 5 PLU  
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5 PLU  
 **`⌘` +** :arrow_right: : Increase the relative scale of the font-width by 5 PLU  
 **`option` +** : :arrow_left: : Rotate the `textAngle` by 30 degrees  
