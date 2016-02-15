@@ -1,5 +1,5 @@
 # plottr.js
-Library for communicating with vintage pen plotters both for plotting or real-time interaction with the device.  
+Javascript Interface for X-Y Pen Plotters that understand HPGL
 
 # Installation
 Clone this repository into a folder on your local machine. From your terminal you can enter the command:  
@@ -36,8 +36,6 @@ and then run the project in typical meteor fashion:
 **`⌘` +** :arrow_left: : Decrease the relative scale of the font-width by 5%  
 **`⌘` +**: :arrow_right: : Increase the relative scale of the font-width by 5%  
 **`Control` + `Spacebar`**: Toggle penState  
-=======
-**`Control` + `Spacebar`**: Toggle PEN-STATE  
 **`⌘` + `F1`** : Select Pen 1  
 **`⌘` + `F2`** : Select Pen 2  
 **`⌘` + `F3`** : Select Pen 3  
@@ -46,58 +44,84 @@ and then run the project in typical meteor fashion:
 **`⌘` + `F6`** : Select Pen 6  
 **`⌘` + `F7`** : Select Pen 7  
 **`⌘` + `F8`** : Select Pen 8  
-**`⌘` + `F12`**: Toggle Visibility of Data Overlay  
-**`Escape`**: Put Away Selected Pen  
+**`⌘` + `F12`** : Toggle Visibility of Data Overlay  
+**`Escape`** : Put away the [[selectedPen]] if there is no pen selected bring the plotter to the home position ([maxWidth], [maxHeight])
 
-Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)  
-Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)  
+**Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)**  
+**Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)**  
 
-# API Documentation  
-## **Error Handling**  
-### **`outputError()`**  
-This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  
-## **Pen Control**  
-=======
 # API Documentation
-## **Error Handling**
-### **`outputError()`**  
+### **Error Handling**
+#### **`outputError()`**  
 This function will update the error information displayed in the console. Use this command if your plotter's error light comes on and you want to learn what code is being thrown along with a description of the code.  
-## **Pen Control**
-### **`penUp([x,y])`**  
-If no parameters are provided the command will send a simple "PU" (PEN-UP) command to the plotter instructing the device to lift the pen. If parameters of X and Y are provided the plotter will move the pen to the X,Y coordinates while keeping the pen raised.  
 
-### **`penDown([x,y])`**  
-If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified X,Y coordinates while keeping the pen down against the surface.  
+### **Pen Control**
+#### **`penUp([x,y])`**  
+The x and y parameters are optional. If no parameters are provided the command will send a simple "PU" (PEN-UP) command to the plotter instructing the device to lift the pen. If parameters of X and Y are provided the plotter will move the pen to the X,Y coordinates while keeping the pen raised.  
 
-## Drawing Functions  
-=======
-## Drawing Functions
-### **`line(x0,y0,x1,y1)`**  
+#### **`penDown([x,y])`**  
+The x and y parameters are optional. If no parameters are provided the command will send a simple "PD" (PEN-UP) command to the plotter instructing the device to drop the pen onto the drawing surface. If parameters of X and Y are provided the plotter will move the pen to the specified (x,y) coordinates while keeping the pen down against the surface.  
+
+#### **`home(movePenToMax)`**  
+This function moves the pen position to the home position (0,0). If the parameter value is `true` the plotter will move to (`plottr.maxHeight`, `plottr.maxWidth`) instead of (0,0). 
+
+### Drawing Functions  
+#### **`line(x0,y0,x1,y1)`**  
 Draws a line from point (X0,Y0) to point (X1,Y1)  
 
-### **`rect(x,y,w,h)`**  
+`line(1000,1000,2000,2000)`  
+
+Draws a line from (1000,1000) to (2000,2000).  
+
+#### **`rect(x,y,w,h)`**  
 Draws a rectangle at point (X,Y) with width of W and height of H  
 
-### **`ellipse(x,y,w,h)`**  
+`rect(2000,2000,250,250)`  
+
+Draws a rectangle at (2000,2000) with width of 250 and height of 250.
+
+#### **`ellipse(x,y,w,h)`**  
 Draws an ellipse with center at point (X,Y) and using width of W and height of H  
 
-### **`point(x,y)`**  
-draw a point at the specified (X,Y) coordinates  
+`ellipse(2250,2250,250,250)`  
 
-## Text Functions  
-=======
-## Text Functions
-### **`text(x, y, string)`**  
-plots the specified STRING starting at point (X,Y)  
+Draws an ellipse centered at (2000,2000) with width of 250 and height of 250.
 
-### **`incrementFontWidthSize(scale)`**  
-increments the font-width size by scale  
+#### **`polygon(listOfPoints, [closed=true])`**  
+Draws a polygon using `listOfPoints`. `listOfPoints` should be an array containing pairs of (x,y) coordinates.  
 
-### **`decrementFontWidthSize(scale)`**  
-decrements the font-width size by scale  
+`polygon([[x0, y0],
+          [x1, y1],
+          [x2, y2],
+          [x3, y3],
+          ...
+          ])`  
 
-### **`incrementFontWidthSize(scale)`**  
-increments the font-width size by scale  
+Draws a polygon by connecting lines between the points specified in `listOfPoints`. By default the polygon is closed, if the second parameter is passed as true the polygon will not be closed.
 
-### **`decrementFontWidthSize(scale)`**  
-decrements the font-width size by scale  
+#### **`point(x,y)`**  
+Plots point at (`x`,`y`).
+
+`point(2250,2250)`
+
+Draws a point at (2250,2250).
+
+### Text Functions  
+#### **`text(x, y, string)`**  
+Plots `string` at (`x`,`y`).
+
+`text(2000,2500,"plottr.js: formerly extinct, eternally distinct.")`
+
+plots the phrase supplied as `string` at the point (2000,2500).
+
+#### **`incrementFontWidthSize(scale)`**  
+Increases the font-width size by scale  
+
+#### **`decrementFontWidthSize(scale)`**  
+Decreases the font-width size by scale  
+
+#### **`incrementFontWidthSize(scale)`**  
+Increases the font-width size by scale  
+
+#### **`decrementFontWidthSize(scale)`**  
+Decreases the font-width size by scale  
