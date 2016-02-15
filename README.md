@@ -84,4 +84,4 @@ decrements the font-width size by scale
 increments the font-width size by scale  
 
 **`decrementFontWidthSize(scale)`**  
-decrements the font-width size by scale  
+decrements the font-width size by scale
