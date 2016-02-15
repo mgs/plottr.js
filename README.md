@@ -22,20 +22,28 @@ and then run the project in typical meteor fashion:
 
 `./plottr.sh`  
 
-# Keyboard Controls
-Control + Spacebar - Toggle PEN-STATE
-left - Moves the cursor one unit left
-up - Moves the cursor one unit up
-right - Moves the cursor one unit right
-down - Moves the cursor one unit down
-Apple + Up - Increase the relative scale of the font-height by 5% 
-Apple + Down - Decrease the relative scale of the font-height by 5%
-Apple + Left - Decrease the relative scale of the font-width by 5%
-Apple + Right - Increase the relative scale of the font-width by 5%
-Apple + F1 through F8 - Select Pen 1-8
-Escape - Put Away Selected Pen
-Apple + F12 - Toggle Visibility of Data Overlay
-[[Pen Input from a wacom device will be drawn at the point where the cursor is located.]] (Coming Soon)
+# Keyboard Controls  
+`Control` + `Spacebar`: Toggle PEN-STATE  
+`Left`: Moves the cursor one unit left  
+`Up`: Moves the cursor one unit up  
+`Right`: Moves the cursor one unit right  
+`Down`: Moves the cursor one unit down  
+`⌘` + `Up`: Increase the relative scale of the font-height by 5%  
+`⌘` + `Down`: Decrease the relative scale of the font-height by 5%  
+`⌘` + `Left`: Decrease the relative scale of the font-width by 5%  
+`⌘` + `Right`: Increase the relative scale of the font-width by 5%  
+`⌘` + `F1`: Select Pen 1  
+`⌘` + `F2`: Select Pen 2  
+`⌘` + `F3`: Select Pen 3  
+`⌘` + `F4`: Select Pen 4  
+`⌘` + `F5`: Select Pen 5  
+`⌘` + `F6`: Select Pen 6  
+`⌘` + `F7`: Select Pen 7  
+`⌘` + `F8`: Select Pen 8  
+`⌘` + `F12`: Toggle Visibility of Data Overlay  
+`Escape`: Put Away Selected Pen  
+
+[[Pen Input from a wacom device will be drawn at the point where the cursor is located.]] (Coming Soon)  
 [[Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface.]] (Coming Soon)  
 
 # Console Commands
