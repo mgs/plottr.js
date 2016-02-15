@@ -43,8 +43,8 @@ and then run the project in typical meteor fashion:
 **`⌘` + `F12`**: Toggle Visibility of Data Overlay  
 **`Escape`**: Put Away Selected Pen  
 
-[[Pen Input from a wacom device will be drawn at the point where the cursor is located.]] (Coming Soon)  
-[[Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface.]] (Coming Soon)  
+Pen Input from a wacom device will be drawn at the point where the cursor is located. (Coming Soon)  
+Drag an SVG file onto the browser window to draw the interpolated shape onto the drawing surface. (Coming Soon)  
 
 # Console Commands
 ## **Error Handling**
@@ -71,7 +71,7 @@ Draws an ellipse with center at point (X,Y) and using width of W and height of H
 draw a point at the specified (X,Y) coordinates  
 
 ## Text Functions
-**`text(x, y, string)`**  
+**`text(x, y, string)`**
 plots the specified STRING starting at point (X,Y)  
 
 **``incrementFontWidthSize(scale)``**  
