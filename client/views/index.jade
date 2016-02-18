@@ -1,15 +1,20 @@
 head
   title plottr.js
 body
-  #cursorValue
-    h1#val X: {{ xValue }} maxX: {{ getWidth }}
-    h1#val Y: {{ yValue }} maxY: {{ getHeight }}
-    h1#val selectedPen: {{ getSelectedPen }}
-    h1#penState penState: {{ penState }}
-    h1#fontSize fontWidth: {{ getFontWidth }}
-    h1#fontSize fontHeight: {{ getFontHeight }}
-    h1#fontSize textAngle: {{ getTextAngle }}
-    h1#error Error: {{ getError }}
-  #pleaseWait
-    h1 Calibrating With Device
+  #pleaseWait(position='relative')
+    p Calibrating The Plotter To Find Character Size and Plotter Dimensions
+  #cursorValue(position='relative')
+    p.val(style="color: {{ getColor xValue }}") pen-position: ............... {{ getPlotterPosition }}
+    p.val(style="color: {{ getColor getWidth }}") plotter-dimensions: ............... {{ getPlotterDimensions }}
+    p.val(style="color: {{ getColor getPageHeight }}") page-dimensions: ............... {{ getPageDimensions }}
+    p.val(style="color: {{ getColor getSelectedPen }}") selected-pen: ....................... [{{ getSelectedPen }}]
+    p.val(style="color: {{ getColor getPenState }}") pen-state: ....................... [{{ getPenState }}]
+    p.val(style="color: {{ getColor getTextAngle }}") text-angle: ............................. {{ getTextAngle }}
+    p.val(style="color: {{ getColor getFontHeight }}") font-dimensions: ........................ {{ getFontDimensions }}
+    p.val(style="color: {{ getErrorColor }}") error: ..................... {{ getErrorCode }}
+  svg#svg.chart
+    each points
+      line(x1='{{randomX}}' y1='{{randomY}}'
+           x2='{{randomX}}' y2='{{randomY}}'
+           stroke='black')
   +serialData

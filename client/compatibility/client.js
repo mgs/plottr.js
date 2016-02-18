@@ -1,5 +1,18 @@
+//// Utils
+// Converts from degrees to radians.
+Math.radians = (degrees) => degrees * Math.PI / 180;
+Math.degrees = (radians) => radians * 180 / Math.PI;
+var charCode = String.fromCharCode;
+
+// Objects
+
 var ui = {
-    bgColor: '#fff'
+    hidden: false,
+    bgColor: 'rgb(255,255,255)',
+    visorBackgroundColor: 'rgba(40,0,40,0.8)',
+    slideDuration: 1000,
+    incrementSpeed: 0.1,
+    incrementingP: false
 };
 
 var plotter = {
@@ -20,15 +33,22 @@ var plotter = {
     }
 };
 
-var charCode = String.fromCharCode;
-var errorCodes = {
-    10: '[10] Output instruction received while another output instruction is executing. The first instruction is executed while the next instruction is ignored.',
-    11: '[11] Invalid byte received after first two characters, ESC., in a device control instruction.',
-    12: '[12] Invalid byte received while parsing a device control instruction. The parameter containing the invalid byte and all the following parameters are defaulted.',
+// This table contains a hash-table with the different possible error codes and their descriptions.
+var errorCodeTable = {
+    10: '[10] Output instruction received while another output instruction is \
+              executing. The first instruction is executed while the next \
+              instruction is ignored.',
+    11: '[11] Invalid byte received after first two characters, ESC., in a \
+              device control instruction.',
+    12: '[12] Invalid byte received while parsing a device control instruction.\
+              The parameter containing the invalid byte and all the following\
+               parameters are defaulted.',
     13: '[13] Parameter out of range.',
-    14: '[14] Too many parameters received. Additional parameters beyond the correct number are ignored.',
+    14: '[14] Too many parameters received. Additional parameters beyond the\
+              correct number are ignored.',
     15: '[15] A framing error, parity error, or overrun error has occurred.',
-    16: '[16] The input buffer has overflowed. This will result in loss of data and probably an HPGL error.',
+    16: '[16] The input buffer has overflowed. This will result in loss of data \
+              and probably an HPGL error.',
     17: '[17] Baud rate mismatch.',
     18: '[18] I/O error indeterminate.',
     20: '[20] RS232 Serial Tx/Rx Test Failed.',
@@ -38,7 +58,7 @@ var errorCodes = {
 // Serial Functions
 function serialError(err){
     if (err >= 10 && err <= 21){
-        plotter.set('error', errorCodes[err]);
+        plotter.set('error', errorCodeTable[err]);
     }
 }
 
@@ -61,47 +81,49 @@ function serialWrite(string, callback){
     });
 }
 
-function smoothIncrement(variable, finish, step){
+function smoothIncrement(variable, finish, step, speed){
     let val = plotter.get(variable);
     let newVal;
+    ui.incrementingP = true;
     if (val < finish){
         newVal = Number(plotter.get(variable)) + step;
         setTimeout(function (){
             plotter.set(variable, newVal);
-            smoothIncrement(variable, finish, step);
-        }, 1);
+            smoothIncrement(variable, finish, step, speed);
+        }, speed/100);
     } else if (val > finish){
         newVal = Number(plotter.get(variable)) - step;
         setTimeout(function (){
             plotter.set(variable, newVal);
-            smoothIncrement(variable, finish, step);
-        }, 1);
+            smoothIncrement(variable, finish, step, speed);
+        }, speed/100);
     } else {
+        ui.incrementingP = false;
         plotter.set(variable, finish);
     }
 }
 
 function bufferedSerialWrite(queue, delay){
-        if(queue.length > 1) {
-            let packet = _.first(queue);
-            let message = packet[0];
-            let callback = packet[1];
+    if(queue.length > 1) {
+        let packet = _.first(queue);
+        let message = packet[0];
+        let callback = packet[1];
+        serialWrite(message, callback);
+        //console.log(message);
+        queue.shift();
+        setTimeout(() => {
+            bufferedSerialWrite(queue, delay);
+        }, delay);
+    } else {
+        let packet = _.first(queue);
+        let message = packet[0];
+        let callback = packet[1];
+        //console.log(message);
+        queue.shift();
+        setTimeout(() => {
             serialWrite(message, callback);
-            console.log(message);
-            queue.shift();
-            setTimeout(() => {
-                bufferedSerialWrite(queue, delay);
-            }, delay);
-        } else {
-            let packet = _.first(queue);
-            let message = packet[0];
-            let callback = packet[1];
-            console.log(message);
-            queue.shift();
-            setTimeout(() => {
-                serialWrite(message, callback);
-            }, delay);
-        }
+        }, delay);
+    }
 }
 
 // Maintenance Functions
@@ -182,7 +204,7 @@ function outputWindow(){
         let b = plotter.get('buffer');
         let mw = Number(b[2]);
         let mh = Number(b[3]);
-        console.log(b);
+
         plotter.set('maxWidth', mw);
         plotter.set('maxHeight', mh);
     });
@@ -254,48 +276,75 @@ function decreaseFontHeight (amount){
 }
 
 function rotate(angle){
-    let newAngle = Number(plotter.get('textAngle')) + angle;
-    console.log(newAngle);
-    if (newAngle < 0){
-        console.log('neg');
-        let a = 360 + (Number(plotter.get('textAngle')) + angle);
-        plotter.set('textAngle', a);
-    } else {
-        console.log('pos');
-        let a = (Number(plotter.get('textAngle')) + angle) % 360;
-        plotter.set('textAngle', a);
+    if (ui.incrementingP === false){
+        let newAngle = Number(plotter.get('textAngle')) + angle;
+        if (newAngle < 0){
+            let a = 360 + (Number(plotter.get('textAngle')) + angle);
+            plotter.set('textAngle', 360);
+            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+        } else if (newAngle > 360) {
+            let a = (Number(plotter.get('textAngle')) + angle) % 360;
+            plotter.set('textAngle', 0);
+            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+            //plotter.set('textAngle', a);
+        } else {
+            let a = (Number(plotter.get('textAngle')) + angle) % 360;
+            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+        }
+        //console.log(plotter.get('textAngle'), Math.cos(Math.radians(newAngle)), Math.sin(Math.radians(newAngle)));
+        serialWrite('DI' + Math.cos(Math.radians(newAngle)) + ',' + Math.sin(Math.radians(newAngle)));
     }
 }
 
 function getData(variable){
     let data = plotter.get(variable);
     if (isNaN(data)){
-        return 'Waiting...';
+        return '.....';
     } else if (typeof(data) === 'number'){
         return data;
     } else {
-        return 'Waiting...';
+        return '.....';
     }
 }
 
 Template.body.helpers({
+    points: () => ScatterPoints.find({}),
     xValue: () => getData('x'),
     yValue: () => getData ('y'),
+    getPlotterPosition: () => '(' + getData('x') + ' , ' + getData('y') + ')',
+    getPlotterDimensions: () => '[' + getData('maxWidth') + ' x ' + getData('maxHeight') + ']',
+    getPageDimensions: () => '[' + getData('pageWidth') + ' x ' + getData('pageHeight') + ']',
+    getPageHeight: () => getData('pageHeight'),
     getHeight: () => getData('maxHeight'),
     getWidth: () => getData('maxWidth'),
-    penState: () => getData('penState'),
+    getPenState: () => getData('penState'),
     getSelectedPen: () => getData('selectedPen'),
-    getFontWidth: () => Math.round(plotter.get('fontWidth') * 80),
-    getFontHeight: () => Math.round(plotter.get('fontHeight') * 160),
-    getTextAngle: () => plotter.get('textAngle'),
-    getError: () => {
+    getFontDimensions: () => Math.round(plotter.get('fontWidth') * 80) + 'x' + Math.round(plotter.get('fontHeight') * 160),
+    getTextAngle: () => getData('textAngle'),
+    getErrorCode: () => {
         let error = plotter.get('error');
         if(error) {
             return error;
         } else {
-            return 'No Error';
+            return 'no errors';
         }
-    }
+    },
+    getColor: (data) =>  {
+        if(data === '.....'){
+            return 'red';
+        } else {
+            return '#00ff60';
+        }
+    },
+    getErrorColor: () => {
+        if(plotter.get('error') > 0){
+            return 'red';
+        } else {
+            return '#00ff60';
+        }
+    },
+    randomX: () => Math.random() * document.width,
+    randomY: () => Math.random() * document.height
 });
 
 var cursor = {
@@ -350,25 +399,38 @@ var shiftedKeydownTable = {
     40: () => cursor.down(5) // Shifted Down Arrow
 };
 
+function togglePen(){
+    if(Number(plotter.get('penState')) === 0) {
+        serialWrite('PD');
+        //outputCommandedPosition();
+    } else {
+        serialWrite('PU');
+        //outputCommandedPosition();
+    }
+}
+
 var controlKeyTable = {
     17: undefined,
-    32: () => {
-        if(plotter.get('penState') === 0) {
-            penDown();
-        } else {
-            penUp();
-        }
-    },
-    0: () => {
-        if(Number(plotter.get('penState')) === 0) {
-            serialWrite('PD');
-            outputCommandedPosition();
-        } else {
-            serialWrite('PU');
-            outputCommandedPosition();
-        }
-    }
+    32: togglePen,
+    0: () => 0
 };
+
+function toggleVisor () {
+    if(ui.hidden){
+        $('#cursorValue')
+            .stop(true, true)
+            .fadeIn({ duration: ui.slideDuration, queue: false })
+            .css('display', 'none')
+            .slideDown(ui.slideDuration);
+        ui.hidden = false;
+    } else {
+        $('#cursorValue')
+            .stop(true, true)
+            .fadeOut({ duration: ui.slideDuration, queue: false })
+            .slideUp(ui.slideDuration);
+        ui.hidden = true;
+    }
+}
 
 var metaKeyTable = {
     27: () => selectPen(0),
@@ -387,16 +449,7 @@ var metaKeyTable = {
     120: () => home(true), // F9
     121: () => home(true), // F10
     122: () => home(true), // F11
-    123: () => {
-        $('#cursorValue').fadeToggle(1000, 'swing', () => {
-            $('canvas').attr({
-                width: document.width,
-                height: document.height
-            });
-            $('#canvas').fadeIn(1000);
-            // fadeToggle (1000);
-        });
-    } 
+    123: () => toggleVisor()
 };
 
 var keydownTable = {
@@ -414,7 +467,6 @@ var keydownTable = {
 };
 
 function handleKeydown (e){
-    console.dir(e);
     if(e.shiftKey){
         if (shiftedKeydownTable.hasOwnProperty(e.keyCode)){
             shiftedKeydownTable[e.keyCode]();
@@ -439,6 +491,17 @@ function handleKeydown (e){
 }
 
 Template.body.events({
+    'click': function () {
+        ScatterPoints.find({}).forEach((point) => {
+            ScatterPoints.update(
+                {_id: point._id}, {
+                    $set: {
+                        x: Math.floor(Math.random()*Session.get('svg.width')),
+                        y: Math.floor(Math.random()*Session.get('svg.height'))
+                    }
+                });
+        });
+    },
     'keydown': (e) => {
         //if (keydownTable.hasOwnProperty(e.keyCode)){
             handleKeydown(e);
@@ -452,7 +515,7 @@ Template.body.events({
                     Session.set({
                         'plotter.x': (Number(plotter.get('x')) - Number(plotter.get('charWidth')))
                     });
-                    var hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
+                    let hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
                     serialWrite(hpgl);
                     plotter.set('code', plotter.get('code') + hpgl + plotter.get('terminator') + ';');
                 }
@@ -462,7 +525,7 @@ Template.body.events({
                 });
             } else {
                 plotter.set('x', (parseFloat(plotter.get('x')) + parseFloat(plotter.get('charWidth'))));
-                var hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
+                let hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
                 serialWrite(hpgl);
                 plotter.set('code', plotter.get('code') + hpgl + plotter.get('terminator') + ';');
             }
@@ -477,44 +540,29 @@ Template.body.events({
     }
 });
 
-Session.setDefault({
-    'plotter.code': '',
-    'plotter.messageQueue': [],
-    'plotter.buffer': [0,0,0],
-    'plotter.status': 0,
-    'plotter.fontWidth': 1.0,
-    'plotter.fontHeight': 1.0,
-    'plotter.textAngle': 90,
-    'plotter.error': 0,
-    'plotter.pageWidth': 0,
-    'plotter.pageHeight': 0,
-    'plotter.maxWidth':  0,
-    'plotter.maxHeight': 0,
-    'plotter.charWidth': 8,
-    'plotter.lineHeight': 16,
-    'plotter.xMin': 1081,
-    'plotter.yMin': 1000,
-    'plotter.p1': 0,
-    'plotter.p2': 0,
-    'plotter.x':  1000,
-    'plotter.y':  1000,
-    'plotter.penState': 0,
-    'plotter.selectedPen': 0,
-    'plotter.terminator': String.fromCharCode(3),
-    'plotter.escape': String.fromCharCode(27),
-    'plotter.debug': true
-});
+var ScatterPoints = new Meteor.Collection(null);
+
+var createScatterPlotData = function(n){
+    for(let i = 0; i < n; i += 1){
+        ScatterPoints.insert({
+            x:Math.floor(Math.random()*Session.get('svg.width')),
+            y:Math.floor(Math.random()*Session.get('svg.height'))
+        });
+    }
+};
 
 Meteor.startup(() => {
-    Session.set({
+    Session.setDefault({
+        'svg.width': $(document).innerWidth(),
+        'svg.height': $(document).innerHeight(),
         'plotter.messageQueue': [],
         'plotter.buffer': [0,0,0],
         'plotter.status': 0,
         'plotter.fontWidth': 1.0,
         'plotter.fontHeight': 1.0,
         'plotter.error': 0,
-        'plotter.pageWidth': 0,
-        'plotter.pageHeight': 0,
+        'plotter.pageWidth': undefined,
+        'plotter.pageHeight': undefined,
         'plotter.maxWidth': 0,
         'plotter.maxHeight': 0,
         'plotter.charWidth': 8,
@@ -525,12 +573,18 @@ Meteor.startup(() => {
         'plotter.p2': 0,
         'plotter.x':  1081,
         'plotter.y':  1000,
+        'plotter.textAngle': 0,
         'plotter.penState': 0,
-        'plotter.selectedPen': 0,
+        'plotter.selectedPen': undefined,
         'plotter.terminator': String.fromCharCode(3),
         'plotter.escape': String.fromCharCode(27),
         'plotter.debug': true
     });
+    $('#svg').width(Session.get('svg.width'));
+    $('#svg').height(Session.get('svg.height'));
+
+    createScatterPlotData(100);
+
     setTimeout (() => {
         initialize();
     }, 500);
@@ -552,13 +606,16 @@ Meteor.startup(() => {
         plotter.set('charWidth', parseFloat(plotter.get('x') - 1000));
         plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
         plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
-        $('#pleaseWait').fadeOut(800,function (){
-            $('body').css('background', ui.bgColor);
-            $('#cursorValue').css('background', ui.bgColor);
-            $('#cursorValue').fadeIn(800);
-            cursor.left(1);
-            cursor.down(1);
-        });
+        //$('#cursorValue').css('background', ui.visorBackgroundColor);
+        $('#cursorValue').fadeOut(ui.slideDuration).slideUp(ui.slideDuration);
+        ui.hidden = true;
+        $('#pleaseWait')
+            .stop(true, true)
+            .fadeOut({ duration: ui.slideDuration, queue: false })
+            .slideUp(ui.slideDuration,() => {
+                cursor.left(1);
+                cursor.down(1);
+            });
     }, 3000);
     var canvas = $('#canvas')[0];
     var ctx = canvas.getContext('2d');
