@@ -30,29 +30,57 @@ var plotter = {
     popMessage: () => {
         let messageQueue = plotter.get('queue');
         plotter.set('messageQueue', messageQueue.pop());
+    },
+    calibrate: () => {
+        setTimeout(() => {
+            initialize();
+        }, 500);
+        setTimeout(() => {
+            outputWindow();
+        }, 1000);
+        setTimeout(() => {
+            penUp(1000,1000);
+        }, 1500);
+        setTimeout(() => {
+            cursor.right(1);
+            cursor.up(1);
+        }, 2000);
+        setTimeout(() => {
+            outputActual();
+        }, 2500);
+        setTimeout(() => {
+            plotter.set('lineHeight', parseFloat(plotter.get('y') - parseFloat(1000)));
+            plotter.set('charWidth', parseFloat(plotter.get('x') - 1000));
+            plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
+            plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
+            $('#cursorValue').fadeOut(ui.slideDuration).slideUp(ui.slideDuration);
+            ui.hidden = true;
+            $('#pleaseWait')
+                .stop(true, true)
+                .fadeOut({ duration: ui.slideDuration, queue: false })
+                .slideUp(ui.slideDuration,() => {
+                    cursor.left(1);
+                    cursor.down(1);
+                });
+        }, 3000);
     }
 };
 
-// This table contains a hash-table with the different possible error codes and their descriptions.
-var errorCodeTable = {
-    10: '[10] Output instruction received while another output instruction is \
-              executing. The first instruction is executed while the next \
-              instruction is ignored.',
-    11: '[11] Invalid byte received after first two characters, ESC., in a \
-              device control instruction.',
-    12: '[12] Invalid byte received while parsing a device control instruction.\
-              The parameter containing the invalid byte and all the following\
-               parameters are defaulted.',
-    13: '[13] Parameter out of range.',
-    14: '[14] Too many parameters received. Additional parameters beyond the\
-              correct number are ignored.',
-    15: '[15] A framing error, parity error, or overrun error has occurred.',
-    16: '[16] The input buffer has overflowed. This will result in loss of data \
-              and probably an HPGL error.',
-    17: '[17] Baud rate mismatch.',
-    18: '[18] I/O error indeterminate.',
-    20: '[20] RS232 Serial Tx/Rx Test Failed.',
-    21: '[21] RS232 DTR Test Failed.'
+// Database
+var svg = {
+    points: new Meteor.Collection(null),
+    createRandomPoints: (n) => {
+        for(let i = 0; i < n; i += 1){
+            svg.points.insert({
+                x:Math.floor(Math.random()*Session.get('svg.width')),
+                y:Math.floor(Math.random()*Session.get('svg.height'))
+            });
+        }
+    },
+    setupCanvas: (width, height) => {
+        $('#svg').width(width);
+        $('#svg').height(height);
+    }
 };
 
 // Serial Functions
@@ -278,20 +306,18 @@ function decreaseFontHeight (amount){
 function rotate(angle){
     if (ui.incrementingP === false){
         let newAngle = Number(plotter.get('textAngle')) + angle;
+        console.log(newAngle);
         if (newAngle < 0){
-            let a = 360 + (Number(plotter.get('textAngle')) + angle);
             plotter.set('textAngle', 360);
-            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+            smoothIncrement('textAngle', 360 - angle, 1, ui.incrementSpeed);
         } else if (newAngle > 360) {
-            let a = (Number(plotter.get('textAngle')) + angle) % 360;
             plotter.set('textAngle', 0);
-            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+            smoothIncrement('textAngle', newAngle % 360, 1, ui.incrementSpeed);
             //plotter.set('textAngle', a);
         } else {
-            let a = (Number(plotter.get('textAngle')) + angle) % 360;
-            smoothIncrement('textAngle', a, 1, ui.incrementSpeed);
+            smoothIncrement('textAngle', newAngle, 1, ui.incrementSpeed);
         }
-        //console.log(plotter.get('textAngle'), Math.cos(Math.radians(newAngle)), Math.sin(Math.radians(newAngle)));
+        console.log(plotter.get('textAngle'), Math.cos(Math.round(Math.radians(newAngle))), Math.sin(Math.round(Math.radians(newAngle))));
         serialWrite('DI' + Math.cos(Math.radians(newAngle)) + ',' + Math.sin(Math.radians(newAngle)));
     }
 }
@@ -308,7 +334,7 @@ function getData(variable){
 }
 
 Template.body.helpers({
-    points: () => ScatterPoints.find({}),
+    points: () => svg.points.find({}),
     xValue: () => getData('x'),
     yValue: () => getData ('y'),
     getPlotterPosition: () => '(' + getData('x') + ' , ' + getData('y') + ')',
@@ -375,20 +401,13 @@ var cursor = {
 };
 
 function newLine(){
-    //console.log(Number(plotter.get('xMin')),Number(plotter.get('y')) + Number(plotter.get('lineHeight')));
     cursor.down(1);
     penUp(plotter.get('xMin'), plotter.get('y'));
 }
 
-function debug(e){
-    if(plotter.get('debug')) {
-        console.log('Writing to serial plotter: ' + 'LB' + charCode(e.keyCode) + plotter.get('terminator') + ';');
-    }
-}
-
 var altKeydownTable = {
-    37: () => rotate(-30),  // Left Arrow
-    39: () => rotate(30)    // Right Arrow
+    37: () => rotate(-45),  // Left Arrow
+    39: () => rotate(45)    // Right Arrow
 };
 
 var shiftedKeydownTable = {
@@ -433,11 +452,11 @@ function toggleVisor () {
 }
 
 var metaKeyTable = {
-    27: () => selectPen(0),
-    37: () => decreaseFontWidth(0.05),
-    38: () => increaseFontHeight(0.05),
-    39: () => increaseFontWidth(0.05),
-    40: () => decreaseFontHeight(0.05),
+     27: () => selectPen(0),
+     37: () => decreaseFontWidth(0.05),
+     38: () => increaseFontHeight(0.05),
+     39: () => increaseFontWidth(0.05),
+     40: () => decreaseFontHeight(0.05),
     112: () => selectPen(1), // F1
     113: () => selectPen(2), // F2
     114: () => selectPen(3), // F3
@@ -453,13 +472,11 @@ var metaKeyTable = {
 };
 
 var keydownTable = {
-    // 8: () => cursor.left(1), // Backspace Key
     9: () => cursor.right(5), // Tab Key
     13: () => newLine(),  // Enter Key
     16: () => 0, // ignore shift key
     18: () => 0, // Alt Key
     27: () => selectPen(0), // Escape Key
-    // 32: () => cursor.right(1), // Spacebar
     37: () => cursor.left(1),  // Left Arrow
     38: () => cursor.up(1),    // Up Arrow
     39: () => cursor.right(1), // Right Arrow
@@ -492,8 +509,8 @@ function handleKeydown (e){
 
 Template.body.events({
     'click': function () {
-        ScatterPoints.find({}).forEach((point) => {
-            ScatterPoints.update(
+        svg.points.find({}).forEach((point) => {
+            svg.points.update(
                 {_id: point._id}, {
                     $set: {
                         x: Math.floor(Math.random()*Session.get('svg.width')),
@@ -540,17 +557,6 @@ Template.body.events({
     }
 });
 
-var ScatterPoints = new Meteor.Collection(null);
-
-var createScatterPlotData = function(n){
-    for(let i = 0; i < n; i += 1){
-        ScatterPoints.insert({
-            x:Math.floor(Math.random()*Session.get('svg.width')),
-            y:Math.floor(Math.random()*Session.get('svg.height'))
-        });
-    }
-};
-
 Meteor.startup(() => {
     Session.setDefault({
         'svg.width': $(document).innerWidth(),
@@ -580,63 +586,7 @@ Meteor.startup(() => {
         'plotter.escape': String.fromCharCode(27),
         'plotter.debug': true
     });
-    $('#svg').width(Session.get('svg.width'));
-    $('#svg').height(Session.get('svg.height'));
-
-    createScatterPlotData(100);
-
-    setTimeout (() => {
-        initialize();
-    }, 500);
-    setTimeout (() => {
-        outputWindow();
-    }, 1000);
-    setTimeout (() => {
-        penUp(1000,1000);
-    }, 1500);
-    setTimeout(() => {
-        cursor.right(1);
-        cursor.up(1);
-    }, 2000);
-    setTimeout (() => {
-        outputActual();
-    }, 2500);
-    setTimeout(() => {
-        plotter.set('lineHeight', parseFloat(plotter.get('y') - parseFloat(1000)));
-        plotter.set('charWidth', parseFloat(plotter.get('x') - 1000));
-        plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
-        plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
-        //$('#cursorValue').css('background', ui.visorBackgroundColor);
-        $('#cursorValue').fadeOut(ui.slideDuration).slideUp(ui.slideDuration);
-        ui.hidden = true;
-        $('#pleaseWait')
-            .stop(true, true)
-            .fadeOut({ duration: ui.slideDuration, queue: false })
-            .slideUp(ui.slideDuration,() => {
-                cursor.left(1);
-                cursor.down(1);
-            });
-    }, 3000);
-    var canvas = $('#canvas')[0];
-    var ctx = canvas.getContext('2d');
-
-    var w = parseFloat(plotter.get('maxWidth'));
-    var h = parseFloat(plotter.get('maxHeight'));
-
-    ctx.canvas.width = w;
-    ctx.canvas.height = h;
+    svg.setupCanvas(Session.get('svg.width'),Session.get('svg.height'));
+    svg.createRandomPoints(100);
+    plotter.calibrate();
 });
-
-
-function updateCanvas (){
-    var canvas = $('#canvas')[0];
-    var ctx = canvas.getContext('2d');
-
-    var w = Math.round(parseFloat(plotter.get('maxWidth') / plotter.get('charWidth')));
-    var h = Math.round(parseFloat(plotter.get('maxHeight') / plotter.get('lineHeight')));
-    if (plotter.get('debug')){
-        console.log(Number(plotter.get('x')) - 1081, Number(plotter.get('y'))-1000, w, h);
-    }
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(Number(plotter.get('x'))-1081, Number(plotter.get('y'))-1000, w, h);
-}
