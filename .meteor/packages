@@ -25,3 +25,4 @@ keypress:keypress
 reactive-var
 gwendall:body-events
 random
+peerlibrary:fs

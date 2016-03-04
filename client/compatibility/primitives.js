@@ -7,6 +7,10 @@ function rect(x, y, w, h){
     penUp();
 }
 
+function line(x0,y0,x1,y1){
+  serialWrite('PA,PU,' + x0 + ',' + y0 + ',PD,' + x1 + ',' + y1 + ',PU');
+}
+
 // Text Functions
 function text(string, x, y, moveArmWhenDone){
     if(x && y){

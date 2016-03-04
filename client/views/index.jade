@@ -11,7 +11,8 @@ body
     p.val(style="color: {{ getColor getPenState }}") pen-state: ....................... [{{ getPenState }}]
     p.val(style="color: {{ getColor getTextAngle }}") text-angle: ............................. {{ getTextAngle }}
     p.val(style="color: {{ getColor getFontHeight }}") font-dimensions: ........................ {{ getFontDimensions }}
-    p.val(style="color: {{ getErrorColor }}") error: ..................... {{ getErrorCode }}
+    p.val(style="color: {{ getColor getSpacing }}") vert/horiz spacing: ........................ {{ getSpacing }}
+    p.val(style="color: {{ getColor getMessageQueue }}") message-queue: ........................ {{ getMessageQueue }}
   svg#svg.chart
     each points
       line(x1='{{randomX}}' y1='{{randomY}}'

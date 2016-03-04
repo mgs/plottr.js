@@ -4,6 +4,23 @@ Math.radians = (degrees) => degrees * Math.PI / 180;
 Math.degrees = (radians) => radians * 180 / Math.PI;
 var charCode = String.fromCharCode;
 
+importedText = [];
+
+function readDroppedFile(input) {
+    if (input.files && input.files[0]) {
+        var w = $(document).innerWidth();
+        var h = $(document).innerHeight();
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            console.log('reader: ', e);
+        };
+        console.log('input: ', input);
+        //reader.readAsDataURL(input.files[0]);
+    }
+}
+
+
 // Objects
 
 var ui = {
@@ -16,7 +33,10 @@ var ui = {
 };
 
 var plotter = {
-    messageQueue: [],
+    data: {
+        size: 0,
+        queue: []
+    },
     get: (key) => {
         return Session.get('plotter.' + key);
     },
@@ -25,7 +45,8 @@ var plotter = {
     },
     pushMessage: (message) => {
         let messageQueue = plotter.get('queue');
-        plotter.set('messageQueue', messageQueue.push(message));
+        messageQueue.push(message);
+        plotter.set('messageQueue', messageQueue);
     },
     popMessage: () => {
         let messageQueue = plotter.get('queue');
@@ -39,30 +60,31 @@ var plotter = {
             outputWindow();
         }, 1000);
         setTimeout(() => {
-            penUp(1000,1000);
-        }, 1500);
-        setTimeout(() => {
-            cursor.right(1);
-            cursor.up(1);
-        }, 2000);
-        setTimeout(() => {
             outputActual();
-        }, 2500);
+        }, 1500);
+        // setTimeout(() => {
+        //     plotter.set('lineHeight', plotter.get('maxHeight') - plotter.get('y'));
+        //     plotter.set('charWidth', plotter.get('x') - plotter.get('xMin'));
+        //     plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
+        //     plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
+        //     plotter.set('xMin', plotter.get('xMin') - (2 * plotter.get('charWidth')));
+        //     plotter.set('yMin', plotter.get('yMin') - (2 * plotter.get('lineHeight')));
         setTimeout(() => {
-            plotter.set('lineHeight', parseFloat(plotter.get('y') - parseFloat(1000)));
-            plotter.set('charWidth', parseFloat(plotter.get('x') - 1000));
-            plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
-            plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
+            penUp(plotter.get('xMin'), plotter.get('maxHeight') - plotter.get('lineHeight'));
             $('#cursorValue').fadeOut(ui.slideDuration).slideUp(ui.slideDuration);
             ui.hidden = true;
             $('#pleaseWait')
                 .stop(true, true)
                 .fadeOut({ duration: ui.slideDuration, queue: false })
                 .slideUp(ui.slideDuration,() => {
-                    cursor.left(1);
-                    cursor.down(1);
+                    //ui.hidden = false;
+                    // penDown();
+                    // penUp();
+                    // cursor.up(1);
+                    // cursor.left(1);
                 });
-        }, 3000);
+        }, 2000);
+        // }, 2000);
     }
 };
 
@@ -72,8 +94,16 @@ var svg = {
     createRandomPoints: (n) => {
         for(let i = 0; i < n; i += 1){
             svg.points.insert({
-                x:Math.floor(Math.random()*Session.get('svg.width')),
-                y:Math.floor(Math.random()*Session.get('svg.height'))
+                x: Math.floor(Math.random()*Session.get('svg.width')),
+                y: Math.floor(Math.random()*Session.get('svg.height'))
+            });
+        }
+    },
+    loadPointsFromSVG: (points) => {
+        for(let i = 0; i < 2; i += 1){
+            svg.points.insert ({
+                x: points[i][0],
+                y: points[i][1]
             });
         }
     },
@@ -98,12 +128,16 @@ function serialRead(){
 }
 
 function serialWrite(string, callback){
-    Meteor.call('write', string + ';', function(err, res){
+    let q = plotter.get('messageQueue');
+    q.push(string + ';');
+    plotter.set('messageQueue', q);
+
+    Meteor.call('write', string + ';', (err, res) => {
         if(err){
             return serialError(err);
         } else {
-            setTimeout(serialRead, 100);
-            setTimeout(callback, 200);
+            setTimeout(serialRead, 500);
+            setTimeout(callback, 600);
             return res;
         }
     });
@@ -114,13 +148,13 @@ function smoothIncrement(variable, finish, step, speed){
     let newVal;
     ui.incrementingP = true;
     if (val < finish){
-        newVal = Number(plotter.get(variable)) + step;
+        newVal = parseFloat(plotter.get(variable)) + step;
         setTimeout(function (){
             plotter.set(variable, newVal);
             smoothIncrement(variable, finish, step, speed);
         }, speed/100);
     } else if (val > finish){
-        newVal = Number(plotter.get(variable)) - step;
+        newVal = parseFloat(plotter.get(variable)) - step;
         setTimeout(function (){
             plotter.set(variable, newVal);
             smoothIncrement(variable, finish, step, speed);
@@ -133,23 +167,22 @@ function smoothIncrement(variable, finish, step, speed){
 
 function bufferedSerialWrite(queue, delay){
     if(queue.length > 1) {
-        let packet = _.first(queue);
-        let message = packet[0];
-        let callback = packet[1];
-        serialWrite(message, callback);
+        let message = _.first(queue);
+        //let callback = packet[1];
+        serialWrite(message);
         //console.log(message);
         queue.shift();
         setTimeout(() => {
             bufferedSerialWrite(queue, delay);
         }, delay);
     } else {
-        let packet = _.first(queue);
-        let message = packet[0];
-        let callback = packet[1];
+        // let packet = _.first(queue);
+        let message = _.first(queue);
+        //let callback = packet[1];
         //console.log(message);
         queue.shift();
         setTimeout(() => {
-            serialWrite(message, callback);
+            serialWrite(message);
         }, delay);
     }
 }
@@ -182,56 +215,72 @@ var plotterErrorCodes = {
 
 // Output Functions
 function outputError(){
-    serialWrite('OE');
-    let errorCode = parseInt(plotter.get('buffer')[0]);
-    if (errorCode >= 0 && errorCode <= 7){
-        plotter.set('error', plotterErrorCodes[errorCode]);
-    }
+    serialWrite('OE',() => {
+        setTimeout(() => {
+            let errorCode = parseInt(plotter.get('buffer')[0]);
+            if (errorCode >= 0 && errorCode <= 7){
+                plotter.set('error', plotterErrorCodes[errorCode]);
+            }
+        });
+    });
 }
 
 function outputStatus(){
-    serialWrite('OS');
-    plotter.set('status', plotter.get('buffer')[0]);
+    serialWrite('OS', () => {
+        setTimeout(() => {
+            let status = plotter.get('buffer')[0];
+            plotter.set('status', status);
+        }, 500);
+    });
 }
 
 function outputP1AndP2(){
-    serialWrite('OP', function () {
-        plotter.set('p1', plotter.get('buffer')[0]);
-        plotter.set('p2', plotter.get('buffer')[1]);
+    serialWrite('OP', () => {
+        setTimeout(() => {
+            let p1 = plotter.get('buffer')[0],
+                p2 = plotter.get('buffer')[1];
+            plotter.set('p1', p1);
+            plotter.set('p2', p2);
+        }, 500);
     });
 }
 
 function outputActual(){
-    serialWrite('OA', function (){
-        let b = plotter.get('buffer');
-        let x = b[0];
-        let y = b[1];
-        let p = b[2];
+    serialWrite('OA', () => {
+        setTimeout(() => {
+            let b = plotter.get('buffer');
+            let x = b[0];
+            let y = b[1];
+            let p = b[2];
 
-        plotter.set('x', x);
-        plotter.set('y', y);
-        plotter.set('penState', p);
+            console.log (x, y, p);
+            plotter.set('x', parseFloat(x));
+            plotter.set('y', parseFloat(y));
+            plotter.set('penState', parseFloat(p));
+        }, 500);
     });
 }
 
 function outputCommandedPosition(){
     serialWrite('OC', function(){
-        let b = plotter.get('buffer');
-        let x = b[0];
-        let y = b[1];
-        let p = b[2];
+        setTimeout(function (){
+            let b = plotter.get('buffer');
+            let x = b[0];
+            let y = b[1];
+            let p = b[2];
 
-        plotter.set('x', x);
-        plotter.set('y', y);
-        plotter.set('penState', p);
+            plotter.set('x', parseFloat(x));
+            plotter.set('y', parseFloat(y));
+            plotter.set('penState', parseFloat(p));
+        }, 500);
     });
 }
 
 function outputWindow(){
     serialWrite('OW', function (){
         let b = plotter.get('buffer');
-        let mw = Number(b[2]);
-        let mh = Number(b[3]);
+        let mw = parseFloat(b[2]);
+        let mh = parseFloat(b[3]);
 
         plotter.set('maxWidth', mw);
         plotter.set('maxHeight', mh);
@@ -241,24 +290,38 @@ function outputWindow(){
 // Drawing Functions
 function penUp(x, y){
     if (x && y){
-        var string = 'PU,' + x + ',' + y;
+        let string = 'PU,' + x + ',' + y;
+        let q = plotter.get('messageQueue');
+        q.push(string + ';');
+        plotter.set('messageQueue', q);
         serialWrite(string, function () {
-            outputActual();
+            plotter.set('x', x);
+            plotter.set('y', y);
         });
     } else {
-        serialWrite('PU', function () {
-            outputActual();
-        });
+        let q = plotter.get('messageQueue');
+        q.push('PU;');
+        plotter.set('messageQueue', q);
+        plotter.set('x', x);
+        plotter.set('y', y);
+        serialWrite('PU', () => {});
     }
 }
 
 function penDown(x, y){
     if (x && y){
-        serialWrite('PD' + x + ',' + y);
-        outputActual();
+        let string = 'PD,' + x + ',' + y;
+        serialWrite(string, () => {
+            plotter.set('x', x);
+            plotter.set('y', y);
+            plotter.messageQueue.push(string + ';');
+        });
     } else {
-        serialWrite('PD');
-        outputActual();
+        serialWrite('PD', () => {
+            plotter.set('x', x);
+            plotter.set('y', y);
+            plotter.messageQueue.push('PD;');
+        });
     }
 }
 
@@ -267,49 +330,60 @@ function selectPen(penNumber){
     serialWrite('SP,' + penNumber);
 }
 
-function home(topRightIfTrue){
-    if(topRightIfTrue){
-        penUp(plotter.get('maxWidth'), plotter.get('maxHeight'));
-    } else {
-        penUp(plotter.get('xMin'), plotter.get('yMin'));
+function home(){
+    switch(plotter.options.homePosition){
+        case 'topRight':
+            penUp(plotter.get('maxWidth'), plotter.get('maxHeight'));
+            break;
+        case 'bottomLeft':
+            penUp(plotter.get('xMin'), plotter.get('yMin'));
+            break;
+        case 'topLeft':
+            penUp(plotter.get('xMin'), plotter.get('yMin'));
+            break;
+        case 'bottomRight':
+            penUp(plotter.get('xMin'), plotter.get('yMin'));
+            break;
+        default:
+            return 0;
     }
 }
 
 function increaseFontWidth (amount){
-    let fsw = (Number(plotter.get('fontWidth')) + amount);
-    let fsh = (Number(plotter.get('fontHeight')));
+    let fsw = (parseFloat(plotter.get('fontWidth')) + amount);
+    let fsh = (parseFloat(plotter.get('fontHeight')));
     plotter.set('fontWidth', fsw);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function decreaseFontWidth (amount){
-    let fsw = (Number(plotter.get('fontWidth')) - amount);
-    let fsh = (Number(plotter.get('fontHeight')));
+    let fsw = (parseFloat(plotter.get('fontWidth')) - amount);
+    let fsh = (parseFloat(plotter.get('fontHeight')));
     plotter.set('fontWidth', fsw);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function increaseFontHeight (amount){
-    let fsw = (Number(plotter.get('fontWidth')));
-    let fsh = (Number(plotter.get('fontHeight')) + amount);
+    let fsw = (parseFloat(plotter.get('fontWidth')));
+    let fsh = (parseFloat(plotter.get('fontHeight')) + amount);
     plotter.set('fontHeight', fsh);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function decreaseFontHeight (amount){
-    let fsw = (Number(plotter.get('fontWidth')));
-    let fsh = (Number(plotter.get('fontHeight'))  - amount);
+    let fsw = (parseFloat(plotter.get('fontWidth')));
+    let fsh = (parseFloat(plotter.get('fontHeight'))  - amount);
     plotter.set('fontHeight', fsh);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function rotate(angle){
     if (ui.incrementingP === false){
-        let newAngle = Number(plotter.get('textAngle')) + angle;
+        let newAngle = parseFloat(plotter.get('textAngle')) + angle;
         console.log(newAngle);
         if (newAngle < 0){
             plotter.set('textAngle', 360);
-            smoothIncrement('textAngle', 360 - angle, 1, ui.incrementSpeed);
+            smoothIncrement('textAngle', 360 + angle, 1, ui.incrementSpeed);
         } else if (newAngle > 360) {
             plotter.set('textAngle', 0);
             smoothIncrement('textAngle', newAngle % 360, 1, ui.incrementSpeed);
@@ -345,7 +419,7 @@ Template.body.helpers({
     getWidth: () => getData('maxWidth'),
     getPenState: () => getData('penState'),
     getSelectedPen: () => getData('selectedPen'),
-    getFontDimensions: () => Math.round(plotter.get('fontWidth') * 80) + 'x' + Math.round(plotter.get('fontHeight') * 160),
+    getFontDimensions: () => Math.round(plotter.get('fontWidth') * 100) + 'x' + Math.round(plotter.get('fontHeight') * 100),
     getTextAngle: () => getData('textAngle'),
     getErrorCode: () => {
         let error = plotter.get('error');
@@ -369,32 +443,52 @@ Template.body.helpers({
             return '#00ff60';
         }
     },
+    getMessageQueue: () => {
+        return plotter.get('messageQueue').length;
+    },
+    getSpacing: () => {
+        return '[' + plotter.get ('horizontalCharacterSpacing') + ',' + plotter.get('verticalCharacterSpacing') + ']';
+    },
     randomX: () => Math.random() * document.width,
     randomY: () => Math.random() * document.height
 });
 
 var cursor = {
+    x: 0,
+    y: 0,
     up: (spaces) => {
-        if (Number(plotter.get('y')) < (Number(plotter.get('maxHeight')))){
-            plotter.set('y', Number(plotter.get('y')) + (Number(plotter.get('lineHeight') * spaces)));
+        let height = (plotter.get('lineHeight') * spaces);
+        let newY = plotter.get('y') + height + (plotter.get('verticalCharacterSpacing') * spaces);
+        if (newY < plotter.get('maxHeight')){
+            cursor.y += spaces;
+            plotter.set('y', newY);
             serialWrite('CP,0,' + spaces);
         }
     },
     left: (spaces) => {
-        if (Number(plotter.get('x')) > Number(plotter.get('xMin'))){
-            plotter.set('x', Number(plotter.get('x') - (Number(plotter.get('charWidth'))) * spaces));
+        let width = (plotter.get('charWidth') * spaces);
+        let newX = plotter.get('x') - (width + (plotter.get('horizontalCharacterSpacing')  * spaces));
+        if (newX >= plotter.get('xMin')){
+            cursor.x -= spaces;
+            plotter.set('x', newX);
             serialWrite('CP,-' + spaces + ',0');
         }
     },
     right: (spaces) => {
-        if (Number(plotter.get('x')) < Number(plotter.get('maxWidth'))){
-            plotter.set('x', Number(plotter.get('x')) + (Number(plotter.get('charWidth')) * spaces));
+        let width = (plotter.get('charWidth') * spaces);
+        let newX = plotter.get('x') + (width + (plotter.get('horizontalCharacterSpacing')  * spaces));
+        if (newX < plotter.get('maxWidth')){
+            cursor.x += spaces;
+            plotter.set('x', newX);
             serialWrite('CP,' + spaces + ',0');
         }
     },
     down: (spaces) => {
-        if (Number(plotter.get('y')) > Number(plotter.get('yMin'))){
-            plotter.set('y', Number(plotter.get('y')) - (Number(plotter.get('lineHeight')) * spaces));
+        let height = (plotter.get('lineHeight') + plotter.get('verticalCharacterSpacing')) * spaces;
+        let newY = plotter.get('y') - height;
+        if(newY > plotter.get('yMin')){
+            cursor.y -= spaces;
+            plotter.set('y', newY);
             serialWrite('CP,0,-' + spaces);
         }
     }
@@ -402,35 +496,38 @@ var cursor = {
 
 function newLine(){
     cursor.down(1);
-    penUp(plotter.get('xMin'), plotter.get('y'));
+    if (plotter.get('x') > plotter.get('xMin')){
+        penUp(plotter.get('returnPoint'), plotter.get('y'));
+    }
 }
 
 var altKeydownTable = {
-    37: () => rotate(-45),  // Left Arrow
-    39: () => rotate(45)    // Right Arrow
+    37: () => rotate(-45),     // Left Arrow
+    39: () => rotate(45)       // Right Arrow
 };
 
 var shiftedKeydownTable = {
     16: () => 0, // Shift Key
-    37: () => cursor.left(5), // Shifted Left Arrow
-    38: () => cursor.up(5),          // Shifted Up Arrow
+    37: () => cursor.left(5),  // Shifted Left Arrow
+    38: () => cursor.up(5),    // Shifted Up Arrow
     39: () => cursor.right(5), // Shifted Right Arrow
-    40: () => cursor.down(5) // Shifted Down Arrow
+    40: () => cursor.down(5)   // Shifted Down Arrow
 };
 
 function togglePen(){
-    if(Number(plotter.get('penState')) === 0) {
-        serialWrite('PD');
-        //outputCommandedPosition();
+    if(plotter.get('penState') === 0) {
+        plotter.set ('penState', 1);
     } else {
-        serialWrite('PU');
-        //outputCommandedPosition();
+        plotter.set ('penState', 0);
     }
 }
 
 var controlKeyTable = {
+    13: () => plotter.set('returnPoint', plotter.get('x')),
     17: undefined,
-    32: togglePen,
+    32: () => {
+        togglePen();
+    },
     0: () => 0
 };
 
@@ -438,37 +535,25 @@ function toggleVisor () {
     if(ui.hidden){
         $('#cursorValue')
             .stop(true, true)
-            .fadeIn({ duration: ui.slideDuration, queue: false })
-            .css('display', 'none')
-            .slideDown(ui.slideDuration);
+            .fadeIn({ duration: ui.slideDuration, queue: false });
+        //.css('display', 'none');
+        //.slideDown(ui.slideDuration);
         ui.hidden = false;
     } else {
         $('#cursorValue')
             .stop(true, true)
-            .fadeOut({ duration: ui.slideDuration, queue: false })
-            .slideUp(ui.slideDuration);
+            .fadeOut({ duration: ui.slideDuration, queue: false });
+        //.slideUp(ui.slideDuration);
         ui.hidden = true;
     }
 }
 
 var metaKeyTable = {
-     27: () => selectPen(0),
-     37: () => decreaseFontWidth(0.05),
-     38: () => increaseFontHeight(0.05),
-     39: () => increaseFontWidth(0.05),
-     40: () => decreaseFontHeight(0.05),
-    112: () => selectPen(1), // F1
-    113: () => selectPen(2), // F2
-    114: () => selectPen(3), // F3
-    115: () => selectPen(4), // F4
-    116: () => selectPen(5), // F5
-    117: () => selectPen(6), // F6
-    118: () => selectPen(7), // F7
-    119: () => selectPen(8), // F8
-    120: () => home(true), // F9
-    121: () => home(true), // F10
-    122: () => home(true), // F11
-    123: () => toggleVisor()
+    27: () => selectPen(0),
+    37: () => decreaseFontWidth(0.05),
+    38: () => increaseFontHeight(0.05),
+    39: () => increaseFontWidth(0.05),
+    40: () => decreaseFontHeight(0.05)
 };
 
 var keydownTable = {
@@ -480,7 +565,23 @@ var keydownTable = {
     37: () => cursor.left(1),  // Left Arrow
     38: () => cursor.up(1),    // Up Arrow
     39: () => cursor.right(1), // Right Arrow
-    40: () => cursor.down(1) // Down Arrow
+    40: () => cursor.down(1), // Down Arrow
+    112: () => selectPen(1), // F1
+    113: () => selectPen(2), // F2
+    114: () => selectPen(3), // F3
+    115: () => selectPen(4), // F4
+    116: () => selectPen(5), // F5
+    117: () => selectPen(6), // F6
+    118: () => selectPen(7), // F7
+    119: () => selectPen(8), // F8
+    120: () => home(true), // F9
+    121: () => saveMessagesToFile(), // F10
+    122: () => togglePen(),    // F11
+    123: () => toggleVisor()
+};
+
+function saveMessagesToFile (){
+    Meteor.call('saveMessagesToFile', plotter.get('messageQueue').join(';\n') + ';');
 };
 
 function handleKeydown (e){
@@ -489,14 +590,17 @@ function handleKeydown (e){
             shiftedKeydownTable[e.keyCode]();
         }
     } else if(e.metaKey) {
+        e.preventDefault();
         if (metaKeyTable.hasOwnProperty(e.keyCode)){
             metaKeyTable[e.keyCode]();
         }
     } else if(e.ctrlKey) {
+        e.preventDefault();
         if (controlKeyTable.hasOwnProperty(e.keyCode)){
             controlKeyTable[e.keyCode]();
         }
     } else if(e.altKey) {
+        e.preventDefault();
         if (altKeydownTable.hasOwnProperty(e.keyCode)){
             altKeydownTable[e.keyCode]();
         }
@@ -505,6 +609,21 @@ function handleKeydown (e){
             keydownTable[e.keyCode]();
         }
     }
+}
+
+function onDrop(e) {
+    let reader = new FileReader();
+    let f = e.originalEvent.dataTransfer.files[0];
+    let extension = f.name.split('.').pop().toLowerCase();
+
+    reader.onload = (e) => {
+        if (extension === 'hpgl'){
+            bufferedSerialWrite(e.target.result.split(';'),100);
+        } else if (extension === 'txt'){
+            serialWrite('LB' + e.target.result + plotter.get('terminator'));
+        }
+    };
+    reader.readAsText(f);
 }
 
 Template.body.events({
@@ -521,27 +640,25 @@ Template.body.events({
     },
     'keydown': (e) => {
         //if (keydownTable.hasOwnProperty(e.keyCode)){
-            handleKeydown(e);
-       // }
+        //e.preventDefault();
+        handleKeydown(e);
+        // }
     },
     'keypress': (e) => {
         //e.preventDefault();
+        //e.preventDefault();
         if (e.keyCode !== 27){
             if (e.keyCode === 8){
-                if (Number(plotter.get('x')) > Number(plotter.get('xMin'))){
-                    Session.set({
-                        'plotter.x': (Number(plotter.get('x')) - Number(plotter.get('charWidth')))
-                    });
+                if (plotter.get('x') > plotter.get('xMin')){
+                    plotter.set('x', plotter.get('x') + plotter.get('charWidth') + plotter.get('horizontalCharacterSpacing'));
                     let hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
                     serialWrite(hpgl);
                     plotter.set('code', plotter.get('code') + hpgl + plotter.get('terminator') + ';');
                 }
             } else if (e.keyCode === 13){
-                Session.set({
-                    'plotter.x': parseFloat(plotter.get('xMin'))
-                });
+                plotter.set('x', plotter.get('xMin'));
             } else {
-                plotter.set('x', (parseFloat(plotter.get('x')) + parseFloat(plotter.get('charWidth'))));
+                plotter.set('x', plotter.get('x') + plotter.get('charWidth') + plotter.get('horizontalCharacterSpacing'));
                 let hpgl = 'LB' + charCode(e.charCode) + plotter.get('terminator');
                 serialWrite(hpgl);
                 plotter.set('code', plotter.get('code') + hpgl + plotter.get('terminator') + ';');
@@ -550,43 +667,78 @@ Template.body.events({
     },
     'keyup': (e) => {
         if(e.ctrlKey) {
+            //e.preventDefault();
             controlKeyTable[e.charCode]();
         } else {
             //outputActual();
         }
+    },
+    'drop': (e) => {
+        e.preventDefault();
+        //e.stopPropagation();
+        e.originalEvent.dataTransfer.dropEffect = 'copy';
+        //let data = e.originalEvent;
+        //console.log(e.originalEvent.dataTransfer);
+        //console.log(data);
+        onDrop(e);
+        //dropEventHandler(e);
+    },
+    'dragover': (e) => {
+        e.preventDefault();
+        e.originalEvent.dataTransfer.dropEffect = 'copy';
+        //e.stopPropagation();
+        //console.log(e.originalEvent.dataTransfer);
     }
 });
 
+// $('body').bind( 'drop', function(event){
+//     console.log(event.originalEvent.dataTransfer);
+//     event.preventDefault();
+//     event.stopPropagation();
+//     return false;
+// });
+// $('body').bind( 'dragover', function(event){
+//     console.log(event.originalEvent.dataTransfer);
+//     event.preventDefault();
+//     event.stopPropagation();
+//     return false;
+// });
+
 Meteor.startup(() => {
-    Session.setDefault({
+    plotter.options = {
         'svg.width': $(document).innerWidth(),
         'svg.height': $(document).innerHeight(),
         'plotter.messageQueue': [],
-        'plotter.buffer': [0,0,0],
+        'plotter.buffer': [],
         'plotter.status': 0,
-        'plotter.fontWidth': 1.0,
-        'plotter.fontHeight': 1.0,
+        'plotter.fontWidth': 0.8,
+        'plotter.fontHeight': 1.6,
         'plotter.error': 0,
-        'plotter.pageWidth': undefined,
-        'plotter.pageHeight': undefined,
-        'plotter.maxWidth': 0,
-        'plotter.maxHeight': 0,
-        'plotter.charWidth': 8,
-        'plotter.lineHeight': 16,
+        'plotter.pageWidth': 9,
+        'plotter.pageHeight': 12,
+        'plotter.maxWidth': 8600,
+        'plotter.maxHeight': 10000,
+        'plotter.charWidth': 81,
+        'plotter.lineHeight': 300,
+        'plotter.verticalCharacterSpacing': 1,
+        'plotter.horizontalCharacterSpacing': 1,
         'plotter.xMin': 1000,
         'plotter.yMin': 1000,
+        'plotter.returnPoint': 1000,
         'plotter.p1': 0,
         'plotter.p2': 0,
-        'plotter.x':  1081,
-        'plotter.y':  1000,
+        'plotter.x':  1000,
+        'plotter.y':  9700,
         'plotter.textAngle': 0,
         'plotter.penState': 0,
-        'plotter.selectedPen': undefined,
+        'plotter.selectedPen': 0,
         'plotter.terminator': String.fromCharCode(3),
         'plotter.escape': String.fromCharCode(27),
+        'plotter.homePosition': 'topLeft',
         'plotter.debug': true
-    });
+    };
+    Session.setDefault(plotter.options);
     svg.setupCanvas(Session.get('svg.width'),Session.get('svg.height'));
-    svg.createRandomPoints(100);
+    //svg.createRandomPoints(100);
     plotter.calibrate();
 });
