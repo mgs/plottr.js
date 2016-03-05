@@ -4,23 +4,6 @@ Math.radians = (degrees) => degrees * Math.PI / 180;
 Math.degrees = (radians) => radians * 180 / Math.PI;
 var charCode = String.fromCharCode;
 
-importedText = [];
-
-function readDroppedFile(input) {
-    if (input.files && input.files[0]) {
-        var w = $(document).innerWidth();
-        var h = $(document).innerHeight();
-        var reader = new FileReader();
-
-        reader.onload = function(e) {
-            console.log('reader: ', e);
-        };
-        console.log('input: ', input);
-        //reader.readAsDataURL(input.files[0]);
-    }
-}
-
-
 // Objects
 
 var ui = {
@@ -62,29 +45,15 @@ var plotter = {
         setTimeout(() => {
             outputActual();
         }, 1500);
-        // setTimeout(() => {
-        //     plotter.set('lineHeight', plotter.get('maxHeight') - plotter.get('y'));
-        //     plotter.set('charWidth', plotter.get('x') - plotter.get('xMin'));
-        //     plotter.set('maxWidth', plotter.get('maxWidth') - (2 * plotter.get('charWidth')));
-        //     plotter.set('maxHeight', plotter.get('maxHeight') - (2 * plotter.get('lineHeight')));
-        //     plotter.set('xMin', plotter.get('xMin') - (2 * plotter.get('charWidth')));
-        //     plotter.set('yMin', plotter.get('yMin') - (2 * plotter.get('lineHeight')));
         setTimeout(() => {
             penUp(plotter.get('xMin'), plotter.get('maxHeight') - plotter.get('lineHeight'));
-            $('#cursorValue').fadeOut(ui.slideDuration).slideUp(ui.slideDuration);
-            ui.hidden = true;
+            ui.hidden = false;
             $('#pleaseWait')
                 .stop(true, true)
                 .fadeOut({ duration: ui.slideDuration, queue: false })
                 .slideUp(ui.slideDuration,() => {
-                    //ui.hidden = false;
-                    // penDown();
-                    // penUp();
-                    // cursor.up(1);
-                    // cursor.left(1);
                 });
         }, 2000);
-        // }, 2000);
     }
 };
 
@@ -166,25 +135,17 @@ function smoothIncrement(variable, finish, step, speed){
 }
 
 function bufferedSerialWrite(queue, delay){
-    if(queue.length > 1) {
-        let message = _.first(queue);
-        //let callback = packet[1];
-        serialWrite(message);
-        //console.log(message);
-        queue.shift();
-        setTimeout(() => {
+    setTimeout(() => {
+        if (queue.length > 1) {
+            d = new Date().toString();
+            serialWrite(queue[0]);
+            queue.shift();
             bufferedSerialWrite(queue, delay);
-        }, delay);
-    } else {
-        // let packet = _.first(queue);
-        let message = _.first(queue);
-        //let callback = packet[1];
-        //console.log(message);
-        queue.shift();
-        setTimeout(() => {
-            serialWrite(message);
-        }, delay);
-    }
+        } else {
+            serialWrite(queue[0]);
+            queue.shift();
+        }
+    }, delay);
 }
 
 // Maintenance Functions
@@ -221,7 +182,7 @@ function outputError(){
             if (errorCode >= 0 && errorCode <= 7){
                 plotter.set('error', plotterErrorCodes[errorCode]);
             }
-        });
+        }, 500);
     });
 }
 

@@ -4,15 +4,16 @@ body
   #pleaseWait(position='relative')
     p Calibrating The Plotter To Find Character Size and Plotter Dimensions
   #cursorValue(position='relative')
-    p.val(style="color: {{ getColor xValue }}") pen-position: ............... {{ getPlotterPosition }}
-    p.val(style="color: {{ getColor getWidth }}") plotter-dimensions: ............... {{ getPlotterDimensions }}
-    p.val(style="color: {{ getColor getPageHeight }}") page-dimensions: ............... {{ getPageDimensions }}
-    p.val(style="color: {{ getColor getSelectedPen }}") selected-pen: ....................... [{{ getSelectedPen }}]
-    p.val(style="color: {{ getColor getPenState }}") pen-state: ....................... [{{ getPenState }}]
-    p.val(style="color: {{ getColor getTextAngle }}") text-angle: ............................. {{ getTextAngle }}
-    p.val(style="color: {{ getColor getFontHeight }}") font-dimensions: ........................ {{ getFontDimensions }}
-    p.val(style="color: {{ getColor getSpacing }}") vert/horiz spacing: ........................ {{ getSpacing }}
-    p.val(style="color: {{ getColor getMessageQueue }}") message-queue: ........................ {{ getMessageQueue }}
+    p.val(style="color: {{ getColor xValue }}") pen-position: .................... {{ getPlotterPosition }}
+    p.val(style="color: {{ getColor getWidth }}") plotter-dimensions: .............. {{ getPlotterDimensions }}
+    p.val(style="color: {{ getColor getPageHeight }}") page-dimensions: ....................... {{ getPageDimensions }}
+    p.val(style="color: {{ getColor getSelectedPen }}") selected-pen: ............................... [{{ getSelectedPen }}]
+    p.val(style="color: {{ getColor getPenState }}") pen-state: .................................. [{{ getPenState }}]
+    p.val(style="color: {{ getColor getTextAngle }}") text-angle: ................................... {{ getTextAngle }}
+    p.val(style="color: {{ getColor getFontHeight }}") font-dimensions: ......................... {{ getFontDimensions }}
+    p.val(style="color: {{ getColor getSpacing }}") vert/horiz spacing: ....................... {{ getSpacing }}
+    p.val(style="color: {{ getColor getMessageQueue }}") message-queue: ................................ {{ getMessageQueue }}
+    p.val(style="color: {{ getColor getErrorCode }}") error: ................................ {{ getErrorCode }}
   svg#svg.chart
     each points
       line(x1='{{randomX}}' y1='{{randomY}}'
