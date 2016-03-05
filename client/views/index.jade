@@ -4,6 +4,7 @@ body
   #pleaseWait(position='relative')
     p Calibrating The Plotter To Find Character Size and Plotter Dimensions
   #cursorValue(position='relative')
+    p.val(style="color: {{ getColor getRecordingState }}") recording: .................................. {{ getRecordingState }}
     p.val(style="color: {{ getColor xValue }}") pen-position: .................... {{ getPlotterPosition }}
     p.val(style="color: {{ getColor getWidth }}") plotter-dimensions: .............. {{ getPlotterDimensions }}
     p.val(style="color: {{ getColor getPageHeight }}") page-dimensions: ....................... {{ getPageDimensions }}

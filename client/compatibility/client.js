@@ -97,10 +97,11 @@ function serialRead(){
 }
 
 function serialWrite(string, callback){
-    let q = plotter.get('messageQueue');
-    q.push(string + ';');
-    plotter.set('messageQueue', q);
-
+    if (plotter.get ('recordingState')){
+        let q = plotter.get('messageQueue');
+        q.push(string + ';');
+        plotter.set('messageQueue', q);
+    }
     Meteor.call('write', string + ';', (err, res) => {
         if(err){
             return serialError(err);
@@ -382,6 +383,7 @@ Template.body.helpers({
     getSelectedPen: () => getData('selectedPen'),
     getFontDimensions: () => Math.round(plotter.get('fontWidth') * 100) + 'x' + Math.round(plotter.get('fontHeight') * 100),
     getTextAngle: () => getData('textAngle'),
+    getRecordingState: () => getData('recordingState'),
     getErrorCode: () => {
         let error = plotter.get('error');
         if(error) {
@@ -483,6 +485,14 @@ function togglePen(){
     }
 }
 
+function toggleRecording(){
+    if(plotter.get('recordingState') === 0) {
+        plotter.set ('recordingState', 1);
+    } else {
+        plotter.set ('recordingState', 0);
+    }
+}
+
 var controlKeyTable = {
     13: () => plotter.set('returnPoint', plotter.get('x')),
     17: undefined,
@@ -535,9 +545,9 @@ var keydownTable = {
     117: () => selectPen(6), // F6
     118: () => selectPen(7), // F7
     119: () => selectPen(8), // F8
-    120: () => home(true), // F9
-    121: () => saveMessagesToFile(), // F10
-    122: () => togglePen(),    // F11
+    120: () => togglePen(), // F9
+    121: () => toggleRecording(), // F10
+    122: () => saveMessagesToFile(),    // F11
     123: () => toggleVisor()
 };
 
@@ -691,6 +701,7 @@ Meteor.startup(() => {
         'plotter.x':  1000,
         'plotter.y':  9700,
         'plotter.textAngle': 0,
+        'plotter.recordingState': 1,
         'plotter.penState': 0,
         'plotter.selectedPen': 0,
         'plotter.terminator': String.fromCharCode(3),
