@@ -26,3 +26,5 @@ reactive-var
 gwendall:body-events
 random
 peerlibrary:fs
+jparker:crypto-base64
+peerlibrary:xml2js

@@ -3,6 +3,73 @@
 Math.radians = (degrees) => degrees * Math.PI / 180;
 Math.degrees = (radians) => radians * 180 / Math.PI;
 var charCode = String.fromCharCode;
+var mySVG;
+
+
+// Changes XML to JSON
+function xmlToJson(xml) {
+    // Create the return object
+    var obj = {};
+
+    if (xml.nodeType === 1) { // element
+        // do attributes
+        if (xml.attributes.length > 0) {
+            obj['@attributes'] = {};
+            for (var j = 0; j < xml.attributes.length; j += 1) {
+                var attribute = xml.attributes.item(j);
+                obj['@attributes'][attribute.nodeName] = attribute.nodeValue;
+            }
+        }
+    } else if (xml.nodeType === 3) { // text
+        obj = xml.nodeValue;
+    }
+
+    // do children
+    if (xml.hasChildNodes()) {
+        for (var i = 0; i < xml.childNodes.length; i += 1) {
+            var item = xml.childNodes.item(i);
+            var nodeName = item.nodeName;
+            if (typeof(obj[nodeName]) === 'undefined') {
+                obj[nodeName] = xmlToJson(item);
+            } else {
+                if (typeof(obj[nodeName].push) === 'undefined') {
+                    var old = obj[nodeName];
+                    obj[nodeName] = [];
+                    obj[nodeName].push(old);
+                }
+                obj[nodeName].push(xmlToJson(item));
+            }
+        }
+    }
+    return obj;
+}
+
+function readPointsFromSVG (xml) {
+    let svg = xmlToJson(xml).svg;
+    let paths = svg.g.path;
+    //let paths = svg.path;
+    //let n = paths.length;
+    console.log(paths);
+    // let points = [],
+    //     jsonPaths = [];
+
+    // for (let i = 0; i < n; i += 1){
+    //     console.log(xmlToJson(paths[i]['@attributes']));
+    // }
+    //return jsonPaths;
+}
+
+//enccode base64
+// function de
+// var rawStr = 'hello world!';
+// var wordArray = CryptoJS.enc.Utf8.parse(rawStr);
+// var base64 = CryptoJS.enc.Base64.stringify(wordArray);
+// console.log('encrypted:', base64);
+
+// //decode base64
+// var parsedWordArray = CryptoJS.enc.Base64.parse(base64);
+// var parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
+// console.log('parsed:',parsedStr);
 
 // Objects
 
@@ -51,8 +118,7 @@ var plotter = {
             $('#pleaseWait')
                 .stop(true, true)
                 .fadeOut({ duration: ui.slideDuration, queue: false })
-                .slideUp(ui.slideDuration,() => {
-                });
+                .slideUp(ui.slideDuration,() => {});
         }, 2000);
     }
 };
@@ -97,7 +163,7 @@ function serialRead(){
 }
 
 function serialWrite(string, callback){
-    if (plotter.get ('recordingState')){
+    if (plotter.get('recordingState')){
         let q = plotter.get('messageQueue');
         q.push(string + ';');
         plotter.set('messageQueue', q);
@@ -118,13 +184,13 @@ function smoothIncrement(variable, finish, step, speed){
     let newVal;
     ui.incrementingP = true;
     if (val < finish){
-        newVal = parseFloat(plotter.get(variable)) + step;
+        newVal = plotter.get(variable) + step;
         setTimeout(function (){
             plotter.set(variable, newVal);
             smoothIncrement(variable, finish, step, speed);
         }, speed/100);
     } else if (val > finish){
-        newVal = parseFloat(plotter.get(variable)) - step;
+        newVal = plotter.get(variable) - step;
         setTimeout(function (){
             plotter.set(variable, newVal);
             smoothIncrement(variable, finish, step, speed);
@@ -138,7 +204,6 @@ function smoothIncrement(variable, finish, step, speed){
 function bufferedSerialWrite(queue, delay){
     setTimeout(() => {
         if (queue.length > 1) {
-            d = new Date().toString();
             serialWrite(queue[0]);
             queue.shift();
             bufferedSerialWrite(queue, delay);
@@ -147,6 +212,27 @@ function bufferedSerialWrite(queue, delay){
             queue.shift();
         }
     }, delay);
+}
+
+function bufferedLabel(queue, delay){
+    let commandString = "";
+    for(let i = 0; i < queue.length; i += 1){
+        commandString += 'LB' + queue[i] + plotter.get('terminator') + ';' + 'CP-' + queue[i].length + ',-1;';
+    }
+    console.log(commandString);
+    serialWrite(commandString);
+    // setTimeout(() => {
+    //     console.log (queue);
+    //     if (queue.length > 1)
+    //     {
+    //         serialWrite('LB' + queue[0] + plotter.get('terminator') + ';' + 'CP-' + queue[0].length + ',-1');
+    //         queue.shift();
+    //         bufferedSerialWrite(queue, delay);
+    //     } else {
+    //         serialWrite('LB' + queue[0] + plotter.get('terminator') + ';' + 'CP-' + queue[0].length + ',-1');
+    //         queue.shift();
+    //     }
+    // }, delay);
 }
 
 // Maintenance Functions
@@ -179,7 +265,7 @@ var plotterErrorCodes = {
 function outputError(){
     serialWrite('OE',() => {
         setTimeout(() => {
-            let errorCode = parseInt(plotter.get('buffer')[0]);
+            let errorCode = plotter.get('buffer')[0];
             if (errorCode >= 0 && errorCode <= 7){
                 plotter.set('error', plotterErrorCodes[errorCode]);
             }
@@ -190,7 +276,7 @@ function outputError(){
 function outputStatus(){
     serialWrite('OS', () => {
         setTimeout(() => {
-            let status = plotter.get('buffer')[0];
+            let status = parseInt(plotter.get('buffer')[0]);
             plotter.set('status', status);
         }, 500);
     });
@@ -199,8 +285,8 @@ function outputStatus(){
 function outputP1AndP2(){
     serialWrite('OP', () => {
         setTimeout(() => {
-            let p1 = plotter.get('buffer')[0],
-                p2 = plotter.get('buffer')[1];
+            let p1 = parseInt(plotter.get('buffer')[0]),
+                p2 = parseInt(plotter.get('buffer')[1]);
             plotter.set('p1', p1);
             plotter.set('p2', p2);
         }, 500);
@@ -210,15 +296,15 @@ function outputP1AndP2(){
 function outputActual(){
     serialWrite('OA', () => {
         setTimeout(() => {
-            let b = plotter.get('buffer');
-            let x = b[0];
-            let y = b[1];
-            let p = b[2];
+            let b = plotter.get('buffer'),
+                x = parseInt(b[0]),
+                y = parseInt(b[1]),
+                p = parseInt(b[2]);
 
             console.log (x, y, p);
-            plotter.set('x', parseFloat(x));
-            plotter.set('y', parseFloat(y));
-            plotter.set('penState', parseFloat(p));
+            plotter.set('x', x);
+            plotter.set('y', y);
+            plotter.set('penState', p);
         }, 500);
     });
 }
@@ -226,23 +312,23 @@ function outputActual(){
 function outputCommandedPosition(){
     serialWrite('OC', function(){
         setTimeout(function (){
-            let b = plotter.get('buffer');
-            let x = b[0];
-            let y = b[1];
-            let p = b[2];
+            let b = plotter.get('buffer'),
+                x = parseInt(b[0]),
+                y = parseInt(b[1]),
+                p = parseInt(b[2]);
 
-            plotter.set('x', parseFloat(x));
-            plotter.set('y', parseFloat(y));
-            plotter.set('penState', parseFloat(p));
+            plotter.set('x', x);
+            plotter.set('y', y);
+            plotter.set('penState', p);
         }, 500);
     });
 }
 
 function outputWindow(){
     serialWrite('OW', function (){
-        let b = plotter.get('buffer');
-        let mw = parseFloat(b[2]);
-        let mh = parseFloat(b[3]);
+        let b = plotter.get('buffer'),
+            mw = parseInt(b[2]),
+            mh = parseInt(b[3]);
 
         plotter.set('maxWidth', mw);
         plotter.set('maxHeight', mh);
@@ -253,17 +339,10 @@ function outputWindow(){
 function penUp(x, y){
     if (x && y){
         let string = 'PU,' + x + ',' + y;
-        let q = plotter.get('messageQueue');
-        q.push(string + ';');
-        plotter.set('messageQueue', q);
-        serialWrite(string, function () {
-            plotter.set('x', x);
-            plotter.set('y', y);
-        });
+        plotter.set('x', x);
+        plotter.set('y', y);
+        serialWrite(string, function () {});
     } else {
-        let q = plotter.get('messageQueue');
-        q.push('PU;');
-        plotter.set('messageQueue', q);
         plotter.set('x', x);
         plotter.set('y', y);
         serialWrite('PU', () => {});
@@ -273,17 +352,13 @@ function penUp(x, y){
 function penDown(x, y){
     if (x && y){
         let string = 'PD,' + x + ',' + y;
-        serialWrite(string, () => {
-            plotter.set('x', x);
-            plotter.set('y', y);
-            plotter.messageQueue.push(string + ';');
-        });
+        plotter.set('x', x);
+        plotter.set('y', y);
+        serialWrite(string, () => {});
     } else {
-        serialWrite('PD', () => {
-            plotter.set('x', x);
-            plotter.set('y', y);
-            plotter.messageQueue.push('PD;');
-        });
+        plotter.set('x', x);
+        plotter.set('y', y);
+        serialWrite('PD');
     }
 }
 
@@ -312,36 +387,36 @@ function home(){
 }
 
 function increaseFontWidth (amount){
-    let fsw = (parseFloat(plotter.get('fontWidth')) + amount);
-    let fsh = (parseFloat(plotter.get('fontHeight')));
+    let fsw = plotter.get('fontWidth') + amount;
+    let fsh = plotter.get('fontHeight');
     plotter.set('fontWidth', fsw);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function decreaseFontWidth (amount){
-    let fsw = (parseFloat(plotter.get('fontWidth')) - amount);
-    let fsh = (parseFloat(plotter.get('fontHeight')));
+    let fsw = plotter.get('fontWidth') - amount;
+    let fsh = plotter.get('fontHeight');
     plotter.set('fontWidth', fsw);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function increaseFontHeight (amount){
-    let fsw = (parseFloat(plotter.get('fontWidth')));
-    let fsh = (parseFloat(plotter.get('fontHeight')) + amount);
+    let fsw = plotter.get('fontWidth');
+    let fsh = plotter.get('fontHeight') + amount;
     plotter.set('fontHeight', fsh);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function decreaseFontHeight (amount){
-    let fsw = (parseFloat(plotter.get('fontWidth')));
-    let fsh = (parseFloat(plotter.get('fontHeight'))  - amount);
+    let fsw = plotter.get('fontWidth');
+    let fsh = plotter.get('fontHeight')  - amount;
     plotter.set('fontHeight', fsh);
     serialWrite('SR,' + fsw + ',' + fsh);
 }
 
 function rotate(angle){
     if (ui.incrementingP === false){
-        let newAngle = parseFloat(plotter.get('textAngle')) + angle;
+        let newAngle = plotter.get('textAngle') + angle;
         console.log(newAngle);
         if (newAngle < 0){
             plotter.set('textAngle', 360);
@@ -353,7 +428,11 @@ function rotate(angle){
         } else {
             smoothIncrement('textAngle', newAngle, 1, ui.incrementSpeed);
         }
-        console.log(plotter.get('textAngle'), Math.cos(Math.round(Math.radians(newAngle))), Math.sin(Math.round(Math.radians(newAngle))));
+        if (newAngle === 360) {
+            setTimeout(function (){
+                plotter.set('textAngle', 0);
+            }, 400);
+        }
         serialWrite('DI' + Math.cos(Math.radians(newAngle)) + ',' + Math.sin(Math.radians(newAngle)));
     }
 }
@@ -480,8 +559,10 @@ var shiftedKeydownTable = {
 function togglePen(){
     if(plotter.get('penState') === 0) {
         plotter.set ('penState', 1);
+        penDown(plotter.get('x'),plotter.get('y'));
     } else {
         plotter.set ('penState', 0);
+        penUp(plotter.get('x'),plotter.get('y'));
     }
 }
 
@@ -591,10 +672,20 @@ function onDrop(e) {
         if (extension === 'hpgl'){
             bufferedSerialWrite(e.target.result.split(';'),100);
         } else if (extension === 'txt'){
-            serialWrite('LB' + e.target.result + plotter.get('terminator'));
+            let lines = e.target.result.split('\n');
+            bufferedLabel(lines, 500);
+            //serialWrite('LB' + e.target.result + plotter.get('terminator'));
+        } else if (extension === 'svg') {
+            mySVG = $.parseXML(e.target.result);
+        } else {
+            console.log(e);
         }
     };
-    reader.readAsText(f);
+    if (extension === 'hpgl' || extension === 'txt' || extension === 'svg'){
+        reader.readAsText(f);
+    } else {
+        reader.readAsDataURL(f);
+    }
 }
 
 Template.body.events({
@@ -611,8 +702,8 @@ Template.body.events({
     },
     'keydown': (e) => {
         //if (keydownTable.hasOwnProperty(e.keyCode)){
-        //e.preventDefault();
         handleKeydown(e);
+        //e.preventDefault();
         // }
     },
     'keypress': (e) => {
@@ -685,14 +776,14 @@ Meteor.startup(() => {
         'plotter.fontWidth': 0.8,
         'plotter.fontHeight': 1.6,
         'plotter.error': 0,
-        'plotter.pageWidth': 9,
-        'plotter.pageHeight': 12,
-        'plotter.maxWidth': 8600,
-        'plotter.maxHeight': 10000,
-        'plotter.charWidth': 81,
+        'plotter.pageWidth': 11,
+        'plotter.pageHeight': 17,
+        'plotter.maxWidth': 16000,
+        'plotter.maxHeight': 11000,
+        'plotter.charWidth': 171,
         'plotter.lineHeight': 300,
-        'plotter.verticalCharacterSpacing': 1,
-        'plotter.horizontalCharacterSpacing': 1,
+        'plotter.verticalCharacterSpacing': 0,
+        'plotter.horizontalCharacterSpacing': 0,
         'plotter.xMin': 1000,
         'plotter.yMin': 1000,
         'plotter.returnPoint': 1000,
