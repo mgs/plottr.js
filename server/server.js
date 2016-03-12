@@ -1,5 +1,6 @@
 /* globals SerialPort */
 
+// Databases
 //var serialPort, serialBuffer, serialData, serialObject;
 
 // serialPort = ;
@@ -9,15 +10,6 @@
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
-};
-
-var plotter = {
-    x: 0,
-    y: 0,
-    p: 0,
-    p1: 0,
-    p2: 11880,
-    dataWritten: []
 };
 
 function writeAndDrain (data, callback){
@@ -37,6 +29,70 @@ function writeAndDrain (data, callback){
 Meteor.startup(function () {
     var Future = Npm.require ('fibers/future');
     var exec = Npm.require ('child_process').exec;
+
+    Plottr = new Meteor.Collection('Plottr');
+
+    Plottr.insert({
+        buffer: [],
+        x: 0,
+        y: 0,
+        penState: 0,
+        p1: 1000,
+        p2: 10880,
+        status: 0,
+        messageQueue: [],
+        dataWritten: [],
+        error: 0,
+        recordingState: 1,
+        selectedPen: 0,
+        debug: true,
+        options: {
+            typography: {
+                fontWidth: 0.8,
+                fontHeight: 1.6,
+                kerning: 81,
+                leading: 300
+            },
+            profiles: {
+                sketchmate: {
+                    'maxWidth': 8600,
+                    'maxHeight': 11600,
+                    'charWidth': 81,
+                    'lineHeight': 300,
+                    'verticalCharacterSpacing': 0,
+                    'horizontalCharacterSpacing': 0,
+                    'xMin': 514,
+                    'yMin': 1000,
+                    'returnPoint': 514,
+                    'textAngle': 0,
+                    'terminator': String.fromCharCode(3),
+                    'escape': String.fromCharCode(27),
+                    'homePosition': 'topLeft'
+                },
+                MP4100: {
+                    'debug': true,
+                    'buffer': [],
+                    'fontWidth': 0.8,
+                    'fontHeight': 1.6,
+                    'pageWidth': 11,
+                    'pageHeight': 17,
+                    'maxWidth': 16000,
+                    'maxHeight': 11600,
+                    'charWidth': 171,
+                    'lineHeight': 300,
+                    'verticalCharacterSpacing': 0,
+                    'horizontalCharacterSpacing': 0,
+                    'xMin': 514,
+                    'yMin': 900,
+                    'returnPoint': 514,
+                    'textAngle': 0,
+                    'terminator': String.fromCharCode(3),
+                    'escape': String.fromCharCode(27),
+                    'homePosition': 'topLeft'
+                }
+            }
+        }
+    });
 
     serialBuffer = 'Not Yet';
     serialData = [];
@@ -81,7 +137,7 @@ Meteor.startup(function () {
             return future.wait();
         },
         saveMessagesToFile: (data) => {
-            fs.writeFile('saved-' + (new Date().toString()).replaceAll(':', '-') + '.hpgl', data, function(err) {
+            fs.writeFile('../../../../../../saved-' + (new Date().toString()).replaceAll(':', '-') + '.hpgl', data, function(err) {
                 if (err) throw err;
             });
         },
@@ -93,6 +149,18 @@ Meteor.startup(function () {
                 console.log('Wrote ' + string + ' to the serial port.');
                 return(data);
             });
+        },
+        getPlotterSettings: (model) => {
+            switch (model){
+                case 'sketchmate':
+                    return(plotter.sketchmate.options);
+                case 'graphtec':
+                    return(plotter.graphtec.options);
+                case 'dxy':
+                    return(plotter.dxy.options);
+                default:
+                    return(plotter.generic.options);
+            }
         }
     });
 });
