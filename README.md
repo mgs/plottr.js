@@ -1,6 +1,8 @@
 # plottr.js
 Javascript interface and API for working with X-Y pen plotters and/or vinyl cutters that understand HPGL.
 
+![alt tag](http://i.imgur.com/LZzHk2b.png)
+
 # Installation
 Clone this repository into a folder on your local machine. From your terminal you can enter the command:  
 
