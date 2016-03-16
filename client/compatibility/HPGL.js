@@ -1,5 +1,26 @@
-var pMax = -2^15+1;
-var pMin = 2^15-1;
+var pMin = -2^15+1;
+var pMax = 2^15-1;
+
+function scaleHPGL(hpgl, scale){
+	  _.map(parseHPGL(hpgl), function(e) {
+		    let cmd = e.slice(0,2);
+		    let arr = _.map(e.slice(2,-1).split(','), (n) => n * scale);
+        return(cmd + arr + ';');
+	  });
+}
+
+function parseHPGL(string){
+    let hpglCommaString = string.replace(/;/gi, ';@');
+    let hpgl = hpglCommaString.split('@');
+
+    return hpgl.filter(function(el) {
+        return el.length !== 0;
+    });
+}
+
+function strikeOutLastCharacter(){
+    return('PU;CP,0.0,0.2;PD;CP,-1,0;PU;CP,0,-0.2;');
+}
 
 function checkParams(paramsArray){
     if(paramsArray.length === _.filter(paramsArray, function(arr){
@@ -11,7 +32,7 @@ function checkParams(paramsArray){
     }
 }
 
-function p$ (code, paramsArray){
+function p$(code, paramsArray){
     if(paramsArray){
         return code + ',' + paramsArray.join(',') + ';';
     } else {
@@ -64,9 +85,13 @@ function plotAbsolute (x, y, pointList) {
 function penUp (x, y, pointList) {
     if(x && y){
         if(pointList){
+            plotter.set('x', pointList[pointList.length-1][0]);
+            plotter.set('y', pointList[pointList.length-1][1]);
             params = x.toString() + ',' + y.toString() + ',' + pointList.join(',');
             return p$('PU', params.split(','));
         } else {
+            plotter.set('x', x);
+            plotter.set('y', y);
             params = x.toString() + ',' + y.toString();
             return p$('PU', params.split(','));
         } 
@@ -78,9 +103,13 @@ function penUp (x, y, pointList) {
 function penDown (x, y, pointList) {
     if(x && y){
         if(pointList){
+            plotter.set('x', pointList[pointList.length-1][0]);
+            plotter.set('y', pointList[pointList.length-1][1]);
             params = x.toString() + ',' + y.toString() + ',' + pointList.join(',');
             return p$('PD', params.split(','));
         } else {
+            plotter.set('x', x);
+            plotter.set('y', y);
             params = x.toString() + ',' + y.toString();
             return p$('PD', params.split(','));
         } 

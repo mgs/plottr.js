@@ -27,4 +27,4 @@ gwendall:body-events
 random
 peerlibrary:fs
 jparker:crypto-base64
-peerlibrary:xml2js
+silentcicero:string.js

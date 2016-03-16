@@ -55,3 +55,34 @@ function pu2in(pu){
 function in2pu (pu){
     return pu*1016;
 }
+
+
+function replaceLetterAtIndex(string, index, replacementLetter){
+    newString = '';
+    for(let i = 0; i < string.length; i += 1){
+        if(i === index){
+            newString += replacementLetter;
+        } else {
+            newString += string[i];
+        }
+    }
+    return newString;
+}
+
+function toggle(variable){
+    plotter.set(S(variable).s, !plotter.get(S(variable).s));
+}
+
+//enccode base64
+// function de
+// var rawStr = 'plotters!';
+// var wordArray = CryptoJS.enc.Utf8.parse(rawStr);
+// var base64 = CryptoJS.enc.Base64.stringify(wordArray);
+// console.log('encrypted:', base64);
+
+// //decode base64
+// var parsedWordArray = CryptoJS.enc.Base64.parse(base64);
+// var parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
+// console.log('parsed:',parsedStr);
+
+// Objects
