@@ -1,0 +1,148 @@
+@import url(https://fonts.googleapis.com/css?family=Oswald\|Share\+Tech\+Mono\|Cutive\+Mono\|VT323\|Droid\+Sans\+Mono);
+
+font1 = 'Oswald'
+font2 = 'Share Tech Mono'
+font3 = 'Cutive Mono'
+font4 = 'VT323'
+font5 = 'Droid Sans Mono'
+
+cursorRate = 1.1s
+currentFont = font2
+fontSize = 24px
+scanLineWidth = 1.0px
+
+red1   = 0
+green1 = 0
+blue1  = 50
+alpha1 = 0.75
+color1 = rgba(red1, green1, blue1, alpha1)
+
+red2   = 0
+green2 = 0
+blue2  = 100
+alpha2 = 0.5
+color2 = rgba(red2, green2, blue2, alpha2)
+
+red3   = 0
+green3 = 0
+blue3  = 255
+alpha3 = 0.25
+color3 = rgba(red3, green3, blue3, alpha3)
+
+@keyframes blink
+  0%   { opacity: 1.0 }
+  20%  { opacity: 1.0 }
+  40%  { opacity: 0.0 }
+  60%  { opacity: 0.0 }
+  80%  { opacity: 1.0 }
+  100% { opacity: 1.0 }
+
+* body
+  width 100%
+  height 100%
+  padding 0px
+  margin 0px
+  overflow hidden
+  image-rendering crisp-edges
+  mix-blend-mode overlay
+  background color1 repeating-linear-gradient(
+   top,
+   color2 scanLineWidth,
+   color3 scanLineWidth*2
+  )
+  background-size 100% scanLineWidth*2
+
+#pleaseWait
+  position fixed
+  color black
+  text-align center
+  vertical-align center
+  background rgba(255,0,255,0.85)
+  height 150%
+  width 100%
+  margin 0px
+  z-index 99
+  top -60px
+  font-size 48pt
+  font-family currentFont
+  color white
+  mix-blend-mode darken
+  
+#cursor
+  text-shadow 0px 0px 10px #FFFFFF
+  box-shadow 0px 0px 5px #FFFFFF
+  background rgba(255,255,255,1.0)
+  position fixed
+  top 8px
+  left 5px
+  width 12.96875px
+  height 25px
+  animation blink cursorRate linear infinite !important
+  
+#cursorValue
+  position fixed
+  width 100%
+  height 400px
+  z-index 98
+  top 0
+
+#canvas
+  position fixed
+  height 100%
+  width 100%
+  top 0
+  z-index 97
+
+#svg
+  position relative
+  background rgba(0,0,0,0.1)
+  z-index -99
+
+#penState
+  color green
+
+#error
+  color red
+
+.line
+  text-shadow 0px 0px 3px #FFFFFF
+  color #FFFFFF
+  font-size fontSize
+  position relative
+  left 5px
+  top 8px
+  z-index 99
+  font-family currentFont
+  text-align left
+
+.label
+  text-shadow 0px 0px 3px #FFFFFF
+  color #FFFFFF
+  font-size fontSize
+  position fixed
+  right 270px
+  top 8px
+  font-family currentFont
+  text-align right
+  text-transform uppercase
+
+.value
+  text-shadow 0px 0px 3px #FFFFFF
+  color #FFFFFF
+  position fixed
+  right 5px
+  top 8px
+  width 250px
+  text-align right
+  font-size fontSize
+  font-family currentFont
+  text-transform capitalize
+
+.hidden
+  display none
+
+.no-error
+  color rgb(0,255,90)
+
+.error
+  color rgb(255,0,0)

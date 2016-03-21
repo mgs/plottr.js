@@ -1,3 +1,6 @@
+var mouseDownTimer;
+var leftMouseButton;
+
 // Databases
 Plottr = new Meteor.Collection('Plottr');
 
@@ -416,9 +419,15 @@ Template.list.helpers({
     }
 });
 
+function updateCursor(){
+    $('#cursor').css('left', plotter.get('xOffset') + (plotter.get('charNumber') * plotter.get('letterWidth')) + 'px');
+    $('#cursor').css('top',  plotter.get('yOffset') + (plotter.get('lineNumber') * plotter.get('letterHeight')) + 'px');
+}
+
 var cursor = {
     x: 0,
     y: 0,
+
     up: (spaces) => {
         let height = plotter.get('lineHeight') * spaces;
         let newY = plotter.get('y') + height;
@@ -426,21 +435,21 @@ var cursor = {
             cursor.y += spaces;
             plotter.set('y', newY);
             plotter.set('lineNumber', plotter.get('lineNumber') - 1);
-            let l = plotter.get('lines');
-            let n = plotter.get('lineNumber');
-            let c = plotter.get('charNumber');
+            let lines = plotter.get('lines');
+            let lineNumber = plotter.get('lineNumber');
+            let charNumber = plotter.get('charNumber');
+            let lineLength = lines[lineNumber].length;
 
-            if(l[n].length < c){
-                //console.log('adding space');
-                for(let i = 0; i <= c-l[n].length+1; i+=1){
-                    l[n] += '\u00a0';
+            if(lineLength < charNumber){
+                let spaces = charNumber - lineLength;
+                console.log(spaces);
+                for(let i = 0; i <= spaces; i++){
+                    console.log(i);
+                    lines[lineNumber] += '\u00a0';
                 }
+                plotter.set('lines', lines);
             }
-            plotter.set('lines', l);
-
-
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,0,' + spaces);
         } else {
             return 0;
@@ -454,8 +463,7 @@ var cursor = {
             plotter.set('y', newY);
             plotter.set('lineNumber', plotter.get('lineNumber') - 1);
             plotter.set('charNumber', plotter.get('charNumber') - 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,' + -spaces + ',' + spaces);
         } else {
             return 0;
@@ -480,8 +488,7 @@ var cursor = {
             cursor.x -= spaces;
             plotter.set('x', newX);
             plotter.set('charNumber', plotter.get('charNumber') - 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,-' + spaces + ',0');
         }
     },
@@ -493,8 +500,7 @@ var cursor = {
             plotter.set('y', newY);
             plotter.set('lineNumber', plotter.get('lineNumber') - 1);
             plotter.set('charNumber', plotter.get('charNumber') + 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,' + spaces + ',' + spaces);
         } else {
             return 0;
@@ -519,9 +525,7 @@ var cursor = {
                 }
             }
             plotter.set('lines', l);
-
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,' + spaces + ',0');
         } else {
             return 0;
@@ -534,31 +538,24 @@ var cursor = {
             cursor.y -= spaces;
             plotter.set('y', newY);
             plotter.set('lineNumber', plotter.get('lineNumber') + 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            let l = plotter.get('lines');
-            let n = plotter.get('lineNumber');
-            let c = plotter.get('charNumber');
+            $('#cursor').css('left', plotter.get('xOffset')+(plotter.get('charNumber') * plotter.get('letterWidth')) + 'px');
+            // updateCursor();
+            let lines = plotter.get('lines');
+            let lineNumber = plotter.get('lineNumber');
+            let charNumber = plotter.get('charNumber');
+            let lineLength = lines[lineNumber].length;
 
-            if(typeof(l[n]) === 'undefined') {
-                //console.log('adding a new list');
-                l[n] = '';
-                if(c !== 0){
-                    for(let i = 0; i < c; i+=1){
-                        l[n] += '\u00a0';
-                    }
+            if(lineLength < charNumber){
+                let spaces = charNumber - lineLength;
+                console.log(spaces);
+                for(let i = 0; i <= spaces; i++){
+                    console.log(i);
+                    lines[lineNumber] += '\u00a0';
                 }
-            } else {
-                if(l[n].length < c){
-                    //console.log('adding space');
-                    for(let i = 0; i <= c-l[n].length+1; i+=1){
-                        l[n] += '\u00a0';
-                    }
-                }
+                plotter.set('lines', lines);
             }
-            plotter.set('lines', l);
 
-
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            $('#cursor').css('top', plotter.get('yOffset')+(plotter.get('lineNumber') * plotter.get('letterHeight')) + 'px');
             return('CP,0,-' + spaces);
         } else {
             return 0;
@@ -572,8 +569,7 @@ var cursor = {
             plotter.set('y', newY);
             plotter.set('lineNumber', plotter.get('lineNumber') + 1);
             plotter.set('charNumber', plotter.get('charNumber') - 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,-' + spaces + ',-' + spaces);
         } else {
             return 0;
@@ -587,8 +583,7 @@ var cursor = {
             plotter.set('y', newY);
             plotter.set('charNumber', plotter.get('charNumber') + 1);
             plotter.set('lineNumber', plotter.get('lineNumber') + 1);
-            $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-            $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+            updateCursor();
             return('CP,' + spaces + ',-' + spaces);
         } else {
             return 0;
@@ -617,8 +612,7 @@ function newLine(){
         plotter.set('y', plotter.get('y') - plotter.get('lineHeight'));
         plotter.plot(cmd);
 
-        $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-        $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+        updateCursor();
     } else if (plotter.get('charNumber') === 0){
         if(typeof(l[n+1]) === 'undefined') {
             l.push('');
@@ -629,8 +623,7 @@ function newLine(){
         plotter.set('y', plotter.get('y') - plotter.get('lineHeight'));
         cmd += 'CP,0,-1;';
         plotter.plot(cmd);
-        $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-        $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+        updateCursor();
     }
 }
 
@@ -692,10 +685,27 @@ var metaKeyTable = {
     '_': () => 0
 };
 
+// function moveCursor(line, char){
+//     plotter.set('lineNumber', line);
+//     plotter.set('charNumber', char);
+
+//     let h = plotter.get('lineHeight');
+//     let w = plotter.get('charWidth');
+
+//     plotter.set('x', plotter.get('xMin') + (w * char));
+//     plotter.set('y', plotter.get('maxHeight') - (h * line));
+
+//     updateCursor();
+// }
+
 var controlKeyTable = {
     'control': () => 0, // ignore control key
     'enter': () => plotter.set('xMin', plotter.get('x')),
     'space': () => plotter.plot(togglePen()),
+    'A': () => {
+        console.log('BLAM');
+        moveCursor(plotter.get('lineNumber'), 0);
+    },
     'backspace': () => plotter.plot(strikeOutLastCharacter()),
     0: () => 0
 };
@@ -738,8 +748,7 @@ var keydownTable = {
             plotter.plot(cursor.left(1));
         }
 
-        $('#cursor').css('left', (10 + plotter.get('charNumber') * 13) + 'px');
-        $('#cursor').css( 'top',  (5 + plotter.get('lineNumber') * 27) + 'px');
+        updateCursor();
     },
     'space': () => plotter.plot(cursor.right(1)),
     'F1': () => plotter.plot(selectPen(1)),
@@ -760,28 +769,33 @@ function saveMessagesToFile (){
     Meteor.call('saveMessagesToFile', plotter.get('messageQueue').join(';\n') + ';');
 };
 
+// function onMouseMove (e){
+//     console.log(e);
+//     mouseDownTimer = setInterval(() => XYtoCharLine(e.pageX, e.pageY), 500);
+//     return false;
+// }
+
 function onKeydown (e){
     if (keyTable.hasOwnProperty(e.keyCode)){
         let name = keyTable[e.keyCode];
+        
         if(e.shiftKey && shiftedKeydownTable.hasOwnProperty(name)){
             shiftedKeydownTable[name]();
-            e.preventDefault();
+            //e.preventDefault();
         } else if(e.metaKey && metaKeyTable.hasOwnProperty(name)) {
-            //console.log(name);
             metaKeyTable[name]();
-            e.preventDefault();
-        } else if(e.ctrlKey && controlKeyTable.hasOwnProperty(name)) {
+            //e.preventDefault();
+        } else if(e.ctrlKey) {
+            let char = chrTable[e.keyCode];
+            console.log(name,char,e.keyCode);
             controlKeyTable[name]();
-            e.preventDefault();
+            //e.preventDefault();
         } else if(e.altKey && altKeydownTable.hasOwnProperty(name)) {
             altKeydownTable[name]();
-            e.preventDefault();
-        } else {
-            //console.log(name);
-            if(keydownTable.hasOwnProperty(name)){
-                keydownTable[name]();
-            }
-            e.preventDefault();
+            //e.preventDefault();
+        } else if(keydownTable.hasOwnProperty(name)){
+            keydownTable[name]();
+            //e.preventDefault();
         }
     }
 }
@@ -822,8 +836,7 @@ function onKeypress (e) {
                         plotter.set('lines', l);
                         plotter.plot(hpgl);
                         plotter.set('code', hpglOut);
-                        $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-                        $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+                        updateCursor();
                     } else {
                         let l = plotter.get('lines');
                         let n = plotter.get('lineNumber');
@@ -837,8 +850,7 @@ function onKeypress (e) {
 
                         plotter.plot(hpgl);
                         plotter.set('code', hpglOut);
-                        $('#cursor').css('left', 10+(plotter.get('charNumber') * 13) + 'px');
-                        $('#cursor').css('top', 5+(plotter.get('lineNumber') * 27) + 'px');
+                        updateCursor();
                     }
                 }
             }
@@ -889,30 +901,114 @@ function onDrop(e) {
     e.preventDefault();
 }
 
-function onDrag(e){
+function onDragOver(e){
     e.preventDefault();
     e.originalEvent.dataTransfer.dropEffect = 'copy';
 }
 
-function onClick (e) {
-    svg.points.find({}).forEach((point) => {
-        svg.points.update(
-            {_id: point._id}, {
-                $set: {
-                    x: Math.floor(Math.random()*Session.get('svg.width')),
-                    y: Math.floor(Math.random()*Session.get('svg.height'))
-                }
-            });
-    });
+function onDrag(e){
+    e.preventDefault();
+    // e.originalEvent.dataTransfer.dropEffect = 'copy';
+    console.log(e);
+    //XYtoCharLine(e.pageX, e.pageY);
 }
+
+function onCut(e){
+    console.log('CUTTING!');
+}
+
+function onCopy(e){
+    console.log('COPYING!');
+}
+
+function onPaste(e){
+    console.log('PASTING!');
+}
+
+function onClick (e) {
+    // svg.points.find({}).forEach((point) => {
+    //     svg.points.update(
+    //         {_id: point._id}, {
+    //             $set: {
+    //                 x: Math.floor(Math.random()*Session.get('svg.width')),
+    //                 y: Math.floor(Math.random()*Session.get('svg.height'))
+    //             }
+    //         });
+    // });
+    XYtoCharLine(e.pageX, e.pageY);
+}
+
+// function onMouseUp(e){
+//     clearInterval(mouseDownTimer);
+//     return false;
+// }
+
+function onMouseDown(e){
+    if(e.which === 1) leftMouseButton = true;
+}
+
+function onMouseUp(e){
+    if(leftMouseButton && e.which === 1) leftMouseButton = false;
+}
+
+function onMouseMove(e){
+    if(leftMouseButton === true){
+        XYtoCharLine(e.pageX, e.pageY);
+    }
+}
+
+function XYtoCharLine(x,y){
+    let c = x / plotter.get('letterWidth');
+    let l = y / plotter.get('letterHeight');
+
+    plotter.set('charNumber', Math.round(c)-1);
+    plotter.set('lineNumber', Math.round(l)-1);
+
+    plotter.set('x', plotter.get('xMin') + (plotter.get('charNumber') * plotter.get('charWidth')));
+    plotter.set('y', plotter.get('maxHeight') - (plotter.get('lineNumber') * plotter.get('lineHeight')));
+
+    updateCursor();
+    plotter.plot(penUp(plotter.get('x'),plotter.get('y')));
+    let lines = plotter.get('lines');
+    let lineNumber = plotter.get('lineNumber');
+    let charNumber = plotter.get('charNumber');
+    let lineLength = lines[lineNumber].length;
+
+    if(lineLength < charNumber){
+        let spaces = charNumber - lineLength;
+        console.log(spaces);
+        for(let i = 0; i <= spaces; i++){
+            console.log(i);
+            lines[lineNumber] += '\u00a0';
+        }
+        plotter.set('lines', lines);
+    }
+}
+
+// Template.body.rendered = function(){
+//     $('body').mousedown((e) => {
+//         if(e.buttons === 1){
+//             $('body').mousemove((e) => {
+//                 XYtoCharLine(e.pageX, e.pageY);
+//             });
+//         }
+//     });
+// };
 
 Template.body.events({
     'click': (e) => onClick(e),
+    'mouseup': (e) => onMouseUp(e),
+    'mousedown': (e) => onMouseDown(e),
+    'mousemove': (e) => onMouseMove(e),
     'keydown': (e) => onKeydown(e),
     'keypress': (e) => onKeypress(e),
     'keyup': (e) => onKeyup(e),
     'drop': (e) => onDrop(e),
-    'dragover': (e) => onDrag(e)
+    'dragover': (e) => onDragOver(e),
+    'drag': (e) => onDrag(e),
+    'cut': (e) => onCut(e),
+    'copy': (e) => onCopy(e),
+    'paste': (e) => onPaste(e)
 });
 
 Meteor.startup(() => {
@@ -956,10 +1052,19 @@ Meteor.startup(() => {
         'plotter.loadedFile': '',
         'plotter.loadedFile.name': 'none',
         'plotter.maxLines': 11400/300,
-        'plotter.charsPerLine': 8262/81
+        'plotter.charsPerLine': 8262/81,
+        'plotter.letterWidth': 12.96875,
+        'plotter.letterHeight': 27,
+        'plotter.xOffset': 5,
+        'plotter.yOffset': 8
     };
     Session.setDefault(options);
     //svg.setupCanvas($(document).innerWidth(), $(document).innerHeight());
     //svg.createRandomPoints(100);
     plotter.calibrate();
+    let arr = [];
+    for(var i = 0; i < 33; i += 1){
+        arr.push('');
+    }
+    plotter.set('lines', arr);
 });

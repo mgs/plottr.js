@@ -20,7 +20,6 @@ autopublish             # Publish all data to the clients (for prototyping)
 insecure                # Allow all DB writes from clients (for prototyping)
 fourquet:serialport
 mquandalle:jade
-mquandalle:stylus
 keypress:keypress
 reactive-var
 gwendall:body-events
@@ -28,3 +27,4 @@ random
 peerlibrary:fs
 jparker:crypto-base64
 silentcicero:string.js
+mquandalle:stylus
