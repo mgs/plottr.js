@@ -23,7 +23,7 @@ ecmascript-runtime@0.2.6
 ejson@1.0.7
 es5-shim@4.1.14
 fastclick@1.0.7
-fourquet:serialport@2.0.2_1
+fourquet:serialport@2.0.6_1
 geojson-utils@1.0.4
 gwendall:body-events@0.1.6
 hot-code-push@1.0.0

@@ -61,14 +61,6 @@ ui = {
 };
 
 plotter = {
-    mode: 'typewriter', // 'plotter', 'turtle', 'typewriter'
-    lines: [''],
-    lineNumber: 0,
-    charNumber: 0,
-    data: {
-        size: 0,
-        queue: []
-    },
     get: (key) => Session.get('plotter.' + key),
     set: (key, value) => Session.set('plotter.' + key, value),
     typewrite: (string) => serialWrite('LB' + string + plotter.get('terminator')),
@@ -372,11 +364,11 @@ function getData(variable){
 
 Template.plotterPreview.helpers({
     lines: () => plotter.get('lines')
-})
+});
 
 Template.list.helpers({
     items: [
-        {name: 'recording',
+        {name: 'storing-to-hpgl',
          value: () => plotter.get('recordingState') === true ? 'Yes' : 'No'},
         {name: 'sending-to-serial',
          value: () => plotter.get('sendingToSerial') === true ? 'Yes' : 'No'},
@@ -385,6 +377,7 @@ Template.list.helpers({
         {name: 'cursor-position',
          value: () => 'Line: ' + plotter.get('lineNumber') + ' / Char: ' + plotter.get('charNumber')},
         {name: 'pen-position',
+         // I tried percentages but went back to PLU (PLotter Units) in the end.
          //value: () => Math.round(Number(plotter.get('x') / plotter.get('maxWidth')) * 1000) + ',' + Math.round(Number(plotter.get('y') / plotter.get('maxHeight')) * 1000)
          value: () => plotter.get('x') + ',' + plotter.get('y')},
         {name: 'max-position',
@@ -424,171 +417,111 @@ function updateCursor(){
     $('#cursor').css('top',  plotter.get('yOffset') + (plotter.get('lineNumber') * plotter.get('letterHeight')) + 'px');
 }
 
+function addSpaceIfNecessary (line, char) {
+    let lines = plotter.get('lines');
+    if(lines[line].length < char){
+        for(let i = 0; i <= char; i += 1){
+            lines[line] += '\u00a0';
+        }
+        plotter.set('lines', lines);
+    }
+}
+
 var cursor = {
     x: 0,
     y: 0,
+    moveY: (spaces) => {
+        // let newY = plotter.get('y') + (plotter.get('lineHeight') * spaces);
+        let newY = plotter.get('y') + (plotter.get('lineHeight') * -spaces);
+        let lines = plotter.get('lines');
+        let maxLineNumber = lines.length;
+        let newLineNumber = plotter.get('lineNumber') + spaces;
 
-    up: (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') + height;
-        if(newY <= plotter.get('maxHeight')){
-            cursor.y += spaces;
-            plotter.set('y', newY);
-            plotter.set('lineNumber', plotter.get('lineNumber') - 1);
-            let lines = plotter.get('lines');
-            let lineNumber = plotter.get('lineNumber');
-            let charNumber = plotter.get('charNumber');
-            let lineLength = lines[lineNumber].length;
-
-            if(lineLength < charNumber){
-                let spaces = charNumber - lineLength;
-                console.log(spaces);
-                for(let i = 0; i <= spaces; i++){
-                    console.log(i);
-                    lines[lineNumber] += '\u00a0';
-                }
-                plotter.set('lines', lines);
-            }
-            updateCursor();
-            return('CP,0,' + spaces);
-        } else {
+        if(newLineNumber < 0){
+            return 0; 
+        } else if(newLineNumber > maxLineNumber) {
             return 0;
+        } else {
+            let oldLineLength = plotter.get('charNumber')-1;
+            let newLineLength = lines[newLineNumber].length;
+
+            if(oldLineLength > newLineLength){
+                addSpaceIfNecessary(newLineNumber, oldLineLength);
+            }
+            plotter.set('lineNumber', newLineNumber);
+            plotter.set('y', newY);
+
+            return spaces;
         }
     },
-    'up-left': (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') + height;
-        if(newY <= plotter.get('maxHeight')){
-            cursor.y += spaces;
-            plotter.set('y', newY);
-            plotter.set('lineNumber', plotter.get('lineNumber') - 1);
-            plotter.set('charNumber', plotter.get('charNumber') - 1);
-            updateCursor();
-            return('CP,' + -spaces + ',' + spaces);
-        } else {
+    moveX:  (spaces) => {
+      // if (plotter.get('charNumber') === 0){
+      //     let n = plotter.get('lineNumber');
+      //     let c = plotter.get('lines')[n-1].length;
+
+      //     if (plotter.get('lineNumber') > 0){
+      //         if(c >= 0){
+      //             return cursor.moveXY(c,-1);
+      //         }
+      //     }
+        // }
+        console.log(plotter.get('charNumber'), spaces);
+        if(plotter.get('charNumber') === 0 && spaces < 0){
+            console.log('returning zero');
             return 0;
         }
-    },
-    left: (spaces) => {
-        let width = plotter.get('charWidth') * spaces;
-        let newX = plotter.get('x') - (width);
-        if(plotter.get('charNumber') === 0){
-            if(plotter.get('lineNumber') === 0){
-                //console.log('a');
-                return 0;
-            } else if(plotter.get('charNumber') === 0){
-                //console.log('b');
-                keydownTable.backspace();
-            } else {
-                //console.log('c');
-                return 0;
-            }
-        } else if(newX >= plotter.get('xMin')){
-            //console.log('d');
-            cursor.x -= spaces;
+
+        let newX = plotter.get('x') + (plotter.get('charWidth') * spaces);
+        let lines = plotter.get('lines');
+
+        if(newX <= plotter.get('maxWidth') && newX >= plotter.get('xMin')){
+            plotter.set('charNumber', plotter.get('charNumber') + spaces);
             plotter.set('x', newX);
-            plotter.set('charNumber', plotter.get('charNumber') - 1);
-            updateCursor();
-            return('CP,-' + spaces + ',0');
+        } else if (newX < plotter.get('xMin')){
+            plotter.set('charNumber', 0);
+            plotter.set('x', plotter.get('xMin'));
+        } else if (newX > plotter.get('maxHeight')){
+            plotter.set('charNumber', plotter.get('charsPerLine'));
+            plotter.set('x', plotter.get('maxWidth'));
         }
-    },
-    'up-right': (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') + height;
-        if(newY <= plotter.get('maxHeight')){
-            cursor.y += spaces;
-            plotter.set('y', newY);
-            plotter.set('lineNumber', plotter.get('lineNumber') - 1);
-            plotter.set('charNumber', plotter.get('charNumber') + 1);
-            updateCursor();
-            return('CP,' + spaces + ',' + spaces);
-        } else {
-            return 0;
-        }
-    },
-    right: (spaces) => {
-        let width = plotter.get('charWidth') * spaces;
-        let newX = plotter.get('x') + width;
-        if(newX <= plotter.get('maxWidth')){
-            cursor.x += spaces;
-            plotter.set('charNumber', plotter.get('charNumber') + 1);
-            plotter.set('x', newX);
 
-            let l = plotter.get('lines');
-            let n = plotter.get('lineNumber');
-            let c = plotter.get('charNumber');
+        let lineNumber = plotter.get('lineNumber');
+        let lineLength = lines[lineNumber].length;
+        let cursorPosition = plotter.get('charNumber');
 
-            if(l[n].length < c){
-                //console.log('adding space');
-                for(let i = 0; i <= c-l[n].length+1; i+=1){
-                    l[n] += '\u00a0';
-                }
-            }
-            plotter.set('lines', l);
-            updateCursor();
-            return('CP,' + spaces + ',0');
-        } else {
-            return 0;
+        if(lineLength < cursorPosition){
+            addSpaceIfNecessary(lineNumber, cursorPosition-1);
         }
+        return spaces;
     },
-    down: (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') - height;
-        if(newY >= plotter.get('yMin')){
-            cursor.y -= spaces;
-            plotter.set('y', newY);
-            plotter.set('lineNumber', plotter.get('lineNumber') + 1);
-            $('#cursor').css('left', plotter.get('xOffset')+(plotter.get('charNumber') * plotter.get('letterWidth')) + 'px');
-            // updateCursor();
-            let lines = plotter.get('lines');
-            let lineNumber = plotter.get('lineNumber');
-            let charNumber = plotter.get('charNumber');
-            let lineLength = lines[lineNumber].length;
+    moveXY: (xOffset, yOffset) => {
+        let x = 0;
+        let y = 0;
 
-            if(lineLength < charNumber){
-                let spaces = charNumber - lineLength;
-                console.log(spaces);
-                for(let i = 0; i <= spaces; i++){
-                    console.log(i);
-                    lines[lineNumber] += '\u00a0';
-                }
-                plotter.set('lines', lines);
-            }
+        if(xOffset !== 0){
+            x = cursor.moveX(xOffset);
+        } else if (xOffset === undefined){
+            x = 0;
+        }
 
-            $('#cursor').css('top', plotter.get('yOffset')+(plotter.get('lineNumber') * plotter.get('letterHeight')) + 'px');
-            return('CP,0,-' + spaces);
-        } else {
-            return 0;
+        if(yOffset !== 0){
+            y = cursor.moveY(yOffset);
+        } else if (y === undefined){
+            y = 0;
         }
+
+        updateCursor();
+        return('CP,' + x + ',' + -y);
     },
-    'down-left': (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') - height;
-        if(newY >= plotter.get('yMin')){
-            cursor.y -= spaces;
-            plotter.set('y', newY);
-            plotter.set('lineNumber', plotter.get('lineNumber') + 1);
-            plotter.set('charNumber', plotter.get('charNumber') - 1);
-            updateCursor();
-            return('CP,-' + spaces + ',-' + spaces);
-        } else {
-            return 0;
-        }
-    },
-    'down-right': (spaces) => {
-        let height = plotter.get('lineHeight') * spaces;
-        let newY = plotter.get('y') - height;
-        if(newY >= plotter.get('yMin')){
-            cursor.y -= spaces;
-            plotter.set('y', newY);
-            plotter.set('charNumber', plotter.get('charNumber') + 1);
-            plotter.set('lineNumber', plotter.get('lineNumber') + 1);
-            updateCursor();
-            return('CP,' + spaces + ',-' + spaces);
-        } else {
-            return 0;
-        }
-    }
+
+    left:  (spaces) => cursor.moveXY(-spaces,0),
+    up:    (spaces) => cursor.moveXY(0,-spaces),
+    right: (spaces) => cursor.moveXY(spaces,0),
+    down:  (spaces) => cursor.moveXY(0,spaces),
+    'up-left': (spaces) => cursor.moveXY(-spaces,-spaces),
+    'up-right': (spaces) => cursor.moveXY(spaces,spaces),
+    'down-right': (spaces) => cursor.moveXY(-spaces,spaces),
+    'down-left': (spaces) => cursor.moveXY(-spaces,-spaces)
 };
 
 function newLine(){
@@ -685,24 +618,23 @@ var metaKeyTable = {
     '_': () => 0
 };
 
-// function moveCursor(line, char){
-//     plotter.set('lineNumber', line);
-//     plotter.set('charNumber', char);
+function moveCursor(line, char){
+    plotter.set('lineNumber', line);
+    plotter.set('charNumber', char);
 
-//     let h = plotter.get('lineHeight');
-//     let w = plotter.get('charWidth');
+    let h = plotter.get('lineHeight');
+    let w = plotter.get('charWidth');
 
-//     plotter.set('x', plotter.get('xMin') + (w * char));
-//     plotter.set('y', plotter.get('maxHeight') - (h * line));
+    plotter.set('x', plotter.get('xMin') + (w * char));
+    plotter.set('y', plotter.get('maxHeight') - (h * line));
 
-//     updateCursor();
-// }
+    updateCursor();
+}
 
 var controlKeyTable = {
-    'control': () => 0, // ignore control key
     'enter': () => plotter.set('xMin', plotter.get('x')),
     'space': () => plotter.plot(togglePen()),
-    'A': () => {
+    'a': () => {
         console.log('BLAM');
         moveCursor(plotter.get('lineNumber'), 0);
     },
@@ -722,34 +654,7 @@ var keydownTable = {
     'up': () => plotter.plot(cursor.up(1)),
     'right': () => plotter.plot(cursor.right(1)),
     'down': () => plotter.plot(cursor.down(1)),
-    'backspace': () => {
-        if(plotter.get('charNumber') === 0 && plotter.get('lineNumber') === 0){
-            return 0;
-        }
-        if(plotter.get('charNumber') === 0 && plotter.get('lineNumber') > 0){
-            let n = plotter.get('lineNumber');
-            let h = plotter.get('lineHeight');
-            let w = plotter.get('charWidth');
-            let c = plotter.get('lines')[n-1].length;
-            if(c > 0){
-                plotter.set('lineNumber', n-1);
-                plotter.set('charNumber', c);
-                plotter.set('x', plotter.get('x') + (w * c));
-                plotter.set('y', plotter.get('maxHeight') - ((n-1) * h));
-                plotter.plot('CP,' + c + ',0;CP,0,1;');
-            } else {
-                plotter.set('lineNumber', n-1);
-                plotter.set('charNumber', 0);
-                plotter.set('x', plotter.get('xMin'));
-                plotter.set('y', plotter.get('maxHeight') - ((n-1) * h));
-                plotter.plot('CP,0,1;');
-            }
-        } else {
-            plotter.plot(cursor.left(1));
-        }
-
-        updateCursor();
-    },
+    'backspace': () => plotter.plot(cursor.left(1)),
     'space': () => plotter.plot(cursor.right(1)),
     'F1': () => plotter.plot(selectPen(1)),
     'F2': () => plotter.plot(selectPen(2)),
@@ -778,17 +683,23 @@ function saveMessagesToFile (){
 function onKeydown (e){
     if (keyTable.hasOwnProperty(e.keyCode)){
         let name = keyTable[e.keyCode];
-        
+        console.log(name);
         if(e.shiftKey && shiftedKeydownTable.hasOwnProperty(name)){
             shiftedKeydownTable[name]();
             //e.preventDefault();
         } else if(e.metaKey && metaKeyTable.hasOwnProperty(name)) {
             metaKeyTable[name]();
             //e.preventDefault();
-        } else if(e.ctrlKey) {
+        } else if(e.ctrlKey && controlKeyTable.hasOwnProperty(name)) {
             let char = chrTable[e.keyCode];
-            console.log(name,char,e.keyCode);
-            controlKeyTable[name]();
+            let key = keyTable[e.keyCode];
+            //console.log(name,char,e.keyCode);
+            if(controlKeyTable.hasOwnProperty(key)){
+                controlKeyTable[name]();
+            }
+            if(chrTable.hasOwnProperty(char)){
+                controlKeyTable[char]();
+            }
             //e.preventDefault();
         } else if(e.altKey && altKeydownTable.hasOwnProperty(name)) {
             altKeydownTable[name]();
@@ -1012,7 +923,11 @@ Template.body.events({
 });
 
 Meteor.startup(() => {
-    let options = {
+    let rolandOptions = {
+        'plotter.data': {
+            size: 0,
+            queue: []
+        },
         'plotter.messageQueue': [],
         'plotter.buffer': [],
         'plotter.lines': [''],
@@ -1058,7 +973,57 @@ Meteor.startup(() => {
         'plotter.xOffset': 5,
         'plotter.yOffset': 8
     };
-    Session.setDefault(options);
+    let graphtecOptions = {
+        'plotter.data': {
+            size: 0,
+            queue: []
+        },
+        'plotter.messageQueue': [],
+        'plotter.buffer': [],
+        'plotter.lines': [''],
+        'plotter.charNumber': 0,
+        'plotter.lineNumber': 0,
+        'plotter.sendingToSerial': true,
+        'plotter.status': 0,
+        'plotter.penMode': 'typewriter',
+        'plotter.fontWidth': 0.8,
+        'plotter.fontHeight': 1.6,
+        'plotter.error': 0,
+        'plotter.pageWidth': 11,
+        'plotter.pageHeight': 17,
+        'plotter.maxWidth': 16160,
+        'plotter.maxHeight': 11100,
+        'plotter.plotterWidth': 0,
+        'plotter.plotterHeight': 0,
+        'plotter.charWidth': 171,
+        'plotter.lineHeight': 300,
+        'plotter.verticalCharacterSpacing': 0,
+        'plotter.horizontalCharacterSpacing': 0,
+        'plotter.xMin': 757,
+        'plotter.yMin': 600,
+        'plotter.p1': [757,11100],
+        'plotter.p2': [16160,600],
+        'plotter.x':  757,
+        'plotter.y':  11100,
+        'plotter.textAngle': 0,
+        'plotter.recordingState': 1,
+        'plotter.penState': 0,
+        'plotter.selectedPen': 0,
+        'plotter.code': '',
+        'plotter.terminator': String.fromCharCode(3),
+        'plotter.escape': String.fromCharCode(27),
+        'plotter.homePosition': 'topLeft',
+        'plotter.debug': true,
+        'plotter.loadedFile': '',
+        'plotter.loadedFile.name': 'none',
+        'plotter.maxLines': 11100/300,
+        'plotter.charsPerLine': 16160/171,
+        'plotter.letterWidth': 12.96875,
+        'plotter.letterHeight': 27,
+        'plotter.xOffset': 5,
+        'plotter.yOffset': 8
+    };
+    Session.setDefault(graphtecOptions);
     //svg.setupCanvas($(document).innerWidth(), $(document).innerHeight());
     //svg.createRandomPoints(100);
     plotter.calibrate();
