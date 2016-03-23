@@ -43,7 +43,7 @@ color3 = rgba(red3, green3, blue3, alpha3)
   padding 0px
   margin 0px
   overflow hidden
-  image-rendering crisp-edges
+  // image-rendering crisp-edges
   mix-blend-mode overlay
   background color1 repeating-linear-gradient(
    top,
@@ -108,7 +108,7 @@ color3 = rgba(red3, green3, blue3, alpha3)
   text-shadow 0px 0px 3px #FFFFFF
   color #FFFFFF
   font-size fontSize
-  position relative
+  position fixed
   left 5px
   top 8px
   z-index 99
@@ -125,6 +125,7 @@ color3 = rgba(red3, green3, blue3, alpha3)
   font-family currentFont
   text-align right
   text-transform uppercase
+  mix-blend-mode color-burn
 
 .value
   text-shadow 0px 0px 3px #FFFFFF
